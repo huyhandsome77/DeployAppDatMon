@@ -381,11 +381,11 @@ function getProductImage(product) {
 
     // Nếu database lưu /uploads/...
     if (product.image.startsWith("/")) {
-        return `http://localhost:3000${product.image}`;
+        return `${API_BASE}${product.image}`;
     }
 
     // Nếu database chỉ lưu tên file
-    return `http://localhost:3000/uploads/${product.image}`;
+    return `${API_BASE}/uploads/${product.image}`;
 }
 
 

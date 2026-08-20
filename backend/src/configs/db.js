@@ -9,7 +9,11 @@ try { pg = require('pg'); } catch (e) {}
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
 const databaseUrl = process.env.DATABASE_URL;
-const dialect = process.env.DB_DIALECT || (databaseUrl ? 'postgres' : 'mysql');
+const configuredDialect = process.env.DB_DIALECT?.toLowerCase();
+const isSupabaseHost = /supabase\.(co|com)/i.test(process.env.DB_HOST || '');
+const dialect = databaseUrl || isSupabaseHost
+    ? 'postgres'
+    : (configuredDialect || 'mysql');
 const isProduction = process.env.NODE_ENV === 'production';
 const selectedDialectModule = dialect === 'postgres' ? pg : mysql2;
 

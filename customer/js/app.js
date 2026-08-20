@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:3000";
+const API_BASE = (window.APP_API_BASE_URL || window.location.origin).replace(/\/$/, '');
 const TOKEN_KEY = 'appdatmon_customer_token';
 const USER_KEY = 'appdatmon_customer_user';
 const app = document.getElementById('app');
