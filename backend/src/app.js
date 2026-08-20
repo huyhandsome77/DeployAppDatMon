@@ -25,10 +25,17 @@ app.get('/docs', (req, res) => {
 });
 
 // Swagger UI & Specification
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+const swaggerUiOptions = {
     explorer: true,
-    customSiteTitle: 'AppDatMon API Docs'
-}));
+    customSiteTitle: 'AppDatMon API Docs',
+    customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
+    customJs: [
+        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.min.js'
+    ]
+};
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 app.get('/api-docs.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');

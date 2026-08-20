@@ -16,6 +16,8 @@ const initializeDatabase = connectDB()
     .then(() => sequelize.sync())
     .then(async () => {
         console.log('Database synced successfully.');
+        await seedProducts();
+        await seedTables();
         await seedAdmin();
         await seedReviews();
         await seedOrders();
