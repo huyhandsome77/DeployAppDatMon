@@ -35,7 +35,7 @@ const swaggerUiOptions = {
     ]
 };
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+app.use('/api-docs', swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 app.get('/api-docs.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
