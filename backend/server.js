@@ -12,23 +12,29 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
-// Connect to Database and sync models
-connectDB();
-
-// Đồng bộ database
-sequelize.sync().then(async () => {
-    console.log('Database synced successfully.');
-    await seedAdmin();
-    await seedReviews();
-    await seedOrders();
-    await seedReservations();
-    // Khởi động dọn dẹp đặt bàn quá hạn
-    startCleanupTask();
-
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
+const initializeDatabase = connectDB()
+    .then(() => sequelize.sync())
+    .then(async () => {
+        console.log('Database synced successfully.');
+        await seedAdmin();
+        await seedReviews();
+        await seedOrders();
+        await seedReservations();
+        startCleanupTask();
+    })
+    .catch(err => {
+        console.error('Failed to initialize database:', err);
+        throw err;
     });
-}).catch(err => {
-    console.error('Failed to sync database:', err);
-});
-module.exports = app;
+
+if (require.main === module) {
+    initializeDatabase.then(() => {
+        app.listen(PORT, () => {
+            console.log(`Server is running on port ${PORT}`);
+        });
+    }).catch(() => process.exit(1));
+}
+
+module.exports = require.main === module
+    ? app
+    : (req, res, next) => initializeDatabase.then(() => app(req, res, next)).catch(next);
