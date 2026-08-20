@@ -1,0 +1,21 @@
+@import './styles.css';
+
+a,
+a:hover,
+a:focus,
+a:active,
+a:visited {
+  text-decoration: none !important;
+}
+
+.dashboard-grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid-two {
+    grid-template-columns: 1fr;
+  }
+}

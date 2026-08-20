@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Bàn - Staff Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="./staff.css" />
+  </head>
+  <body>
+    <div class="admin-new-shell">
+      <aside class="admin-sidebar-shell">
+        <div class="admin-brand-box">
+          <div class="admin-brand-badge">
+            <div class="admin-brand-logo-wrap">
+              <img src="/uploads/logo.png" alt="FutureSushi Logo" class="admin-brand-logo" onerror="this.onerror=null; this.src='uploads/logo.png';" />
+            </div>
+            <div>
+              <h1 class="admin-brand-title">FutureSushi</h1>
+              <p class="admin-brand-subtitle">Nhân viên Phục vụ</p>
+            </div>
+          </div>
+          <div class="admin-system-status">
+            <span class="status-pulse-dot"></span>
+            <span>Đang trực ca phục vụ</span>
+          </div>
+        </div>
+
+        <nav class="admin-sidebar-nav" aria-label="Navigation">
+          <section class="admin-sidebar-section">
+            <div class="admin-sidebar-section-title">CHỨC NĂNG PHỤC VỤ</div>
+            <a class="nav-item" href="staff.html">
+              <span class="nav-item-main">
+                <span class="nav-icon-box"><i class="fa-solid fa-receipt"></i></span>
+                <span class="nav-label">Quản lý đơn hàng</span>
+              </span>
+            </a>
+            <a class="nav-item active" href="staff-tables.html">
+              <span class="nav-item-main">
+                <span class="nav-icon-box"><i class="fa-solid fa-table-cells"></i></span>
+                <span class="nav-label">Quản lý bàn</span>
+              </span>
+            </a>
+            <a class="nav-item" href="staff-reservations.html">
+              <span class="nav-item-main">
+                <span class="nav-icon-box"><i class="fa-solid fa-calendar-check"></i></span>
+                <span class="nav-label">Quản lý đặt bàn</span>
+              </span>
+            </a>
+            <a class="nav-item" href="staff-points.html">
+              <span class="nav-item-main">
+                <span class="nav-icon-box"><i class="fa-solid fa-coins"></i></span>
+                <span class="nav-label">Quản lý tích điểm</span>
+              </span>
+            </a>
+          </section>
+        </nav>
+
+        <div class="admin-sidebar-profile">
+          <div class="admin-profile-avatar">ST</div>
+          <div class="admin-profile-copy">
+            <div class="admin-profile-name">Nhân Viên Phục Vụ</div>
+            <div class="admin-profile-role">STAFF</div>
+          </div>
+          <button class="admin-logout-button" data-action="logout" title="Đăng xuất">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </aside>
+
+      <main class="admin-content-shell">
+        <header class="admin-topbar-shell">
+          <div class="admin-topbar-left">
+            <div class="admin-breadcrumb">
+              <span>Phục vụ</span>
+              <i class="fa-solid fa-chevron-right"></i>
+              <strong class="current">Quản lý bàn</strong>
+            </div>
+          </div>
+
+          <div class="admin-search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="staff-search-input" placeholder="Tìm kiếm số bàn..." />
+          </div>
+
+          <div class="admin-topbar-right">
+            <div class="admin-live-clock">
+              <i class="fa-regular fa-clock"></i>
+              <span id="live-clock-text">Live Staff</span>
+            </div>
+            <div class="admin-noti-btn" title="Thông báo">
+              <i class="fa-solid fa-bell"></i>
+              <span class="noti-badge"></span>
+            </div>
+          </div>
+        </header>
+
+        <section class="admin-main-content" style="display:grid; gap:1.25rem">
+          <!-- Metric KPI Summary Strip -->
+          <section class="kpi-summary-strip">
+            <article class="kpi-mini-card">
+              <div class="kpi-mini-icon green"><i class="fa-solid fa-circle-dot"></i></div>
+              <div class="kpi-mini-copy">
+                <span class="kpi-mini-label">Bàn đang trống</span>
+                <span class="kpi-mini-value" id="metric-empty">0</span>
+              </div>
+            </article>
+            <article class="kpi-mini-card">
+              <div class="kpi-mini-icon blue"><i class="fa-solid fa-bookmark"></i></div>
+              <div class="kpi-mini-copy">
+                <span class="kpi-mini-label">Bàn đã đặt trước</span>
+                <span class="kpi-mini-value" id="metric-booked">0</span>
+              </div>
+            </article>
+            <article class="kpi-mini-card">
+              <div class="kpi-mini-icon amber"><i class="fa-solid fa-user-group"></i></div>
+              <div class="kpi-mini-copy">
+                <span class="kpi-mini-label">Bàn đang có khách sử dụng</span>
+                <span class="kpi-mini-value" id="metric-serving">0</span>
+              </div>
+            </article>
+            <article class="kpi-mini-card">
+              <div class="kpi-mini-icon purple"><i class="fa-solid fa-broom"></i></div>
+              <div class="kpi-mini-copy">
+                <span class="kpi-mini-label">Bàn cần dọn dẹp</span>
+                <span class="kpi-mini-value" id="metric-cleaning">0</span>
+              </div>
+            </article>
+          </section>
+
+          <!-- Quản lý bàn Panel -->
+          <section class="dashboard-panel" id="tables-section">
+            <div class="dashboard-panel-header">
+              <div>
+                <h3 class="dashboard-panel-title"><i class="fa-solid fa-table-cells text-accent" style="margin-right:0.4rem"></i>Quản lý bàn</h3>
+                <p class="dashboard-panel-copy">Theo dõi trạng thái của toàn bộ bàn trong nhà hàng (bàn đã đặt trước, bàn đang trống, bàn đang có khách sử dụng) để sắp xếp chỗ ngồi hợp lý, tiếp nhận khách nhanh chóng và hạn chế trùng hoặc bỏ sót bàn.</p>
+              </div>
+            </div>
+            <div class="orders-grid tables-card-grid" id="staff-tables-grid" style="margin-top:1rem">
+              <!-- Dynamically rendered tables -->
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <!-- Dedicated Staff Payment Checkout Modal (Tiền mặt & PayOS) -->
+    <div class="modal-backdrop hidden" id="staff-payment-modal">
+      <div class="modal-card" style="max-width:500px">
+        <div class="modal-head">
+          <div>
+            <h3 class="modal-title" id="payment-modal-title">💳 Thanh toán Đơn hàng #0</h3>
+            <div style="font-size:0.83rem; color:#64748b" id="payment-modal-sub">Vị trí: Bàn #1 • Khách hàng: Khách vãng lai</div>
+          </div>
+          <button class="btn btn-ghost btn-small" id="close-staff-payment-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body" style="display:grid; gap:1.2rem; padding:1rem 0">
+          <!-- Order Total Summary Header -->
+          <div style="background:linear-gradient(135deg, #004ac6, #1e3a8a); color:#ffffff; padding:1.2rem; border-radius:18px; text-align:center; box-shadow:0 8px 20px rgba(0,74,198,0.25)">
+            <div style="font-size:0.82rem; opacity:0.85; text-transform:uppercase; font-weight:700; letter-spacing:0.5px">Tổng Tiền Cần Thanh Toán</div>
+            <div style="font-size:2rem; font-weight:900; margin:0.2rem 0" id="payment-modal-amount">0 ₫</div>
+            <div style="font-size:0.8rem; opacity:0.9" id="payment-modal-items-count">0 món ăn trong đơn hàng</div>
+          </div>
+
+          <!-- Payment Method Selector Tabs -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; background:#f1f5f9; padding:0.3rem; border-radius:12px">
+            <button type="button" class="btn btn-primary" id="tab-pay-cash" style="font-size:0.88rem; padding:0.6rem"><i class="fa-solid fa-money-bill-wave"></i> 💵 Tiền mặt</button>
+            <button type="button" class="btn btn-secondary" id="tab-pay-payos" style="font-size:0.88rem; padding:0.6rem"><i class="fa-solid fa-qrcode"></i> 📲 Chuyển khoản PayOS</button>
+          </div>
+
+          <!-- Panel 1: Tiền mặt -->
+          <div id="panel-pay-cash" style="display:grid; gap:1rem">
+            <div style="background:#f8fafc; padding:1rem; border-radius:14px; border:1px solid #cbd5e1">
+              <label style="font-size:0.85rem; font-weight:700; color:#111c2d; display:block; margin-bottom:0.4rem">Tiền khách đưa (₫)</label>
+              <input type="number" id="cash-given-input" placeholder="Ví dụ: 500000" style="width:100%; font-size:1.1rem; padding:0.6rem; border-radius:10px; border:1px solid #94a3b8; font-weight:800" />
+              <div style="margin-top:0.6rem; display:flex; justify-content:space-between; align-items:center; font-size:0.9rem">
+                <span style="color:#64748b">Tiền thừa trả khách:</span>
+                <strong style="font-size:1.1rem; color:#15803d" id="cash-change-text">0 ₫</strong>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-confirm-cash-paid" style="width:100%; padding:0.8rem; font-size:1rem; font-weight:800">
+              <i class="fa-solid fa-circle-check"></i> Xác Nhận Đã Thu Tiền Mặt
+            </button>
+          </div>
+
+          <!-- Panel 2: Chuyển khoản PayOS / VietQR -->
+          <div id="panel-pay-payos" class="hidden" style="display:grid; gap:1rem; text-align:center">
+            <div style="background:#ffffff; padding:1.2rem; border-radius:18px; border:2px solid #3b82f6; box-shadow:0 6px 18px rgba(0,74,198,0.1)">
+              <div style="font-size:0.82rem; font-weight:800; color:#004ac6; text-transform:uppercase">Mã QR Thanh Toán PayOS / VietQR</div>
+              <img id="payos-qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=PayOSLoading" alt="PayOS QR" style="width:200px; height:200px; border-radius:12px; margin:0.8rem auto; display:block; border:1px solid #cbd5e1" />
+              <div style="font-size:0.82rem; color:#1e293b; font-weight:700" id="payos-qr-status">⏳ Đang tạo liên kết thanh toán PayOS...</div>
+              <code style="display:block; margin-top:0.4rem; background:#f1f5f9; padding:0.35rem; border-radius:6px; font-size:0.75rem" id="payos-order-code">PAYOS-DH0</code>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem">
+              <a id="btn-open-payos-url" href="#" target="_blank" class="btn btn-secondary btn-small" style="padding:0.6rem"><i class="fa-solid fa-arrow-up-right-from-square"></i> Mở PayOS Web</a>
+              <button class="btn btn-secondary btn-small" id="btn-check-payos-status" style="padding:0.6rem"><i class="fa-solid fa-rotate"></i> Kiểm tra PayOS</button>
+            </div>
+
+            <button class="btn btn-primary" id="btn-confirm-transfer-paid" style="width:100%; padding:0.8rem; font-size:1rem; font-weight:800">
+              <i class="fa-solid fa-circle-check"></i> Xác Nhận Đã Nhận Chuyển Khoản
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dedicated Table QR Code Generator Modal -->
+    <div class="modal-backdrop hidden" id="table-qr-modal">
+      <div class="modal-card" style="max-width:420px; text-align:center">
+        <div class="modal-head">
+          <h3 class="modal-title" id="table-qr-modal-title">📱 Mã QR Gọi Món Bàn #1</h3>
+          <button class="btn btn-ghost btn-small" id="close-table-qr-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="padding:1rem 0; display:grid; gap:1rem">
+          <div style="background:#ffffff; padding:1.2rem; border-radius:20px; border:2px solid #3b82f6; box-shadow:0 8px 24px rgba(0,74,198,0.1)">
+            <div style="font-weight:800; font-size:1.1rem; color:#004ac6; margin-bottom:0.6rem">FUTURESUSHI STUDIO</div>
+            <img id="table-qr-image" src="" alt="Mã QR Bàn" style="width:210px; height:210px; border-radius:12px; margin:0 auto; display:block; border:1px solid #cbd5e1" />
+            <div style="margin-top:0.8rem; font-weight:800; font-size:1.05rem; color:#111c2d" id="table-qr-subtext">Bàn #1 • Sức chứa 4 người</div>
+            <div style="font-size:0.8rem; color:#64748b; margin-top:0.2rem">Quét mã QR để xem Menu & Gọi món tại bàn</div>
+            <code style="display:block; margin-top:0.5rem; background:#f1f5f9; padding:0.4rem; border-radius:8px; font-size:0.75rem; word-break:break-all" id="table-qr-url-text">https://appdatmon.com/table/T1-001</code>
+          </div>
+          <div style="display:flex; gap:0.6rem; justify-content:center">
+            <a id="btn-download-table-qr" class="btn btn-primary" href="" download="Ma_QR_Ban.png" target="_blank"><i class="fa-solid fa-download"></i> Tải Mã QR</a>
+            <button class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> In Mã QR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="./staff.js?v=1.0.7"></script>
+  </body>
+</html>

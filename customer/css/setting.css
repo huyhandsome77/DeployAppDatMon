@@ -1,0 +1,643 @@
+/*==================================================
+                    SETTING PAGE
+==================================================*/
+
+.setting-page {
+
+    min-height:100vh;
+
+    padding-top:80px;
+
+}
+
+
+/*==================================================
+                    HERO
+==================================================*/
+
+.setting-hero {
+
+    padding:90px 8% 45px;
+
+}
+
+
+.setting-hero .section-title {
+
+    margin-bottom:0;
+
+}
+
+
+.setting-hero h1 {
+
+    color:#ffffff;
+
+}
+
+
+/*==================================================
+                    SETTINGS SECTION
+==================================================*/
+
+.settings-section {
+
+    padding:20px 8% 100px;
+
+}
+
+
+/*==================================================
+                    SETTINGS CARD
+==================================================*/
+
+.settings-card {
+
+    width:min(850px,100%);
+
+    margin:auto;
+
+    background:#18181b;
+
+    border:1px solid rgba(255,255,255,.07);
+
+    border-radius:24px;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 20px 50px rgba(0,0,0,.35);
+
+}
+
+
+/*==================================================
+                    SETTING ITEM
+==================================================*/
+
+.setting-item {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+    padding:23px 28px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.07);
+
+    cursor:pointer;
+
+    transition:.25s;
+
+}
+
+
+.setting-item:last-child {
+
+    border-bottom:none;
+
+}
+
+
+.setting-item:hover {
+
+    background:#222225;
+
+}
+
+
+/*==================================================
+                    ICON
+==================================================*/
+
+.setting-icon {
+
+    width:50px;
+
+    height:50px;
+
+    flex-shrink:0;
+
+    border-radius:15px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:
+        rgba(214,40,40,.10);
+
+    color:#d62828;
+
+    font-size:20px;
+
+    transition:.25s;
+
+}
+
+
+.setting-item:hover .setting-icon {
+
+    background:#d62828;
+
+    color:#ffffff;
+
+}
+
+
+/*==================================================
+                    CONTENT
+==================================================*/
+
+.setting-content {
+
+    flex:1;
+
+}
+
+
+.setting-content h3 {
+
+    color:#ffffff;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    margin-bottom:5px;
+
+}
+
+
+.setting-content p {
+
+    color:#999;
+
+    font-size:13px;
+
+    line-height:1.6;
+
+}
+
+
+/*==================================================
+                    ARROW
+==================================================*/
+
+.setting-arrow {
+
+    color:#666;
+
+    font-size:14px;
+
+    transition:.25s;
+
+}
+
+
+.setting-item:hover .setting-arrow {
+
+    color:#d62828;
+
+    transform:translateX(5px);
+
+}
+
+
+/*==================================================
+                    CONTENT AREA
+==================================================*/
+
+.setting-content-area {
+
+    width:min(850px,100%);
+
+    margin:25px auto 0;
+
+}
+
+
+.setting-panel {
+
+    background:#18181b;
+
+    border:1px solid rgba(255,255,255,.07);
+
+    border-radius:22px;
+
+    padding:28px;
+
+    box-shadow:
+        0 18px 45px rgba(0,0,0,.3);
+
+    animation:settingFade .3s ease;
+
+}
+
+
+@keyframes settingFade {
+
+    from {
+
+        opacity:0;
+
+        transform:translateY(10px);
+
+    }
+
+    to {
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+
+/*==================================================
+                    PLACEHOLDER
+==================================================*/
+
+.setting-placeholder {
+
+    text-align:center;
+
+    padding:50px 20px;
+
+    color:#777;
+
+}
+
+
+.setting-placeholder i {
+
+    font-size:35px;
+
+    color:#d62828;
+
+    margin-bottom:15px;
+
+}
+
+
+.setting-placeholder h3 {
+
+    color:#ffffff;
+
+    margin-bottom:8px;
+
+}
+
+
+.setting-placeholder p {
+
+    color:#777;
+
+}
+
+
+/*==================================================
+                    PANEL TITLE
+==================================================*/
+
+.setting-panel-title {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    margin-bottom:25px;
+
+}
+
+
+.setting-panel-title i {
+
+    color:#d62828;
+
+    font-size:20px;
+
+}
+
+
+.setting-panel-title h2 {
+
+    color:#ffffff;
+
+    font-size:22px;
+
+}
+
+
+/*==================================================
+                    INFO ROW
+==================================================*/
+
+.info-row {
+
+    display:flex;
+
+    justify-content:space-between;
+
+    gap:20px;
+
+    padding:15px 0;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.07);
+
+}
+
+
+.info-row:last-child {
+
+    border-bottom:none;
+
+}
+
+
+.info-label {
+
+    color:#888;
+
+}
+
+
+.info-value {
+
+    color:#ffffff;
+
+    font-weight:500;
+
+    text-align:right;
+
+}
+
+
+/*==================================================
+                    HISTORY ITEM
+==================================================*/
+
+.history-item {
+
+    background:#222225;
+
+    border:1px solid rgba(255,255,255,.06);
+
+    border-radius:15px;
+
+    padding:18px;
+
+    margin-bottom:12px;
+
+}
+
+
+.history-item:last-child {
+
+    margin-bottom:0;
+
+}
+
+
+.history-top {
+
+    display:flex;
+
+    justify-content:space-between;
+
+    gap:15px;
+
+    margin-bottom:10px;
+
+}
+
+
+.history-title {
+
+    color:#ffffff;
+
+    font-weight:600;
+
+}
+
+
+.history-date {
+
+    color:#888;
+
+    font-size:12px;
+
+}
+
+
+.history-info {
+
+    color:#aaa;
+
+    font-size:13px;
+
+    line-height:1.7;
+
+}
+
+
+.history-price {
+
+    color:#ff595e;
+
+    font-weight:700;
+
+    margin-top:8px;
+
+}
+
+
+/*==================================================
+                    REVIEW
+==================================================*/
+
+.review-stars {
+
+    color:#f4b400;
+
+    font-size:18px;
+
+    letter-spacing:2px;
+
+    margin-bottom:8px;
+
+}
+
+
+.review-comment {
+
+    color:#bbb;
+
+    line-height:1.7;
+
+}
+
+
+/*==================================================
+                    FORM
+==================================================*/
+
+.setting-form {
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+}
+
+
+.setting-form label {
+
+    color:#ffffff;
+
+    font-size:14px;
+
+    font-weight:500;
+
+}
+
+
+.setting-form input {
+
+    width:100%;
+
+    padding:14px 16px;
+
+    margin-top:7px;
+
+    border-radius:12px;
+
+    border:1px solid #34343a;
+
+    background:#222225;
+
+    color:#ffffff;
+
+    outline:none;
+
+}
+
+
+.setting-form input:focus {
+
+    border-color:#d62828;
+
+    box-shadow:
+        0 0 0 3px rgba(214,40,40,.1);
+
+}
+
+
+.setting-form button {
+
+    margin-top:5px;
+
+}
+
+
+/*==================================================
+                    DANGER
+==================================================*/
+
+.setting-danger {
+
+    background:
+        rgba(214,40,40,.02);
+
+}
+
+
+.setting-danger .setting-icon {
+
+    color:#ff595e;
+
+    background:
+        rgba(214,40,40,.12);
+
+}
+
+
+.setting-danger h3 {
+
+    color:#ff595e;
+
+}
+
+
+.setting-danger:hover {
+
+    background:
+        rgba(214,40,40,.08);
+
+}
+
+
+/*==================================================
+                    LOADING
+==================================================*/
+
+.setting-loading {
+
+    text-align:center;
+
+    padding:30px;
+
+    color:#888;
+
+}
+
+
+.setting-loading i {
+
+    color:#d62828;
+
+    margin-right:8px;
+
+}
+
+
+/*==================================================
+                    EMPTY
+==================================================*/
+
+.setting-empty {
+
+    text-align:center;
+
+    padding:35px 20px;
+
+    color:#777;
+
+}
+
+
+.setting-empty i {
+
+    display:block;
+
+    font-size:30px;
+
+    color:#555;
+
+    margin-bottom:12px;
+
+}
+
+

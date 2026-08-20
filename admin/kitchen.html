@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Món Ăn - Kitchen Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="./kitchen.css" />
+  </head>
+  <body>
+    <div class="admin-new-shell">
+      <aside class="admin-sidebar-shell">
+        <div class="admin-brand-box">
+          <div class="admin-brand-badge">
+            <div class="admin-brand-logo-wrap">
+              <img src="/uploads/logo.png" alt="FutureSushi Logo" class="admin-brand-logo" onerror="this.onerror=null; this.src='uploads/logo.png';" />
+            </div>
+            <div>
+              <h1 class="admin-brand-title">FutureSushi</h1>
+              <p class="admin-brand-subtitle">Bộ phận Bếp</p>
+            </div>
+          </div>
+          <div class="admin-system-status">
+            <span class="status-pulse-dot"></span>
+            <span>Trực bộ phận bếp</span>
+          </div>
+        </div>
+
+        <nav class="admin-sidebar-nav" aria-label="Navigation">
+          <section class="admin-sidebar-section">
+            <div class="admin-sidebar-section-title">CHỨC NĂNG BẾP</div>
+            <a class="nav-item active" href="kitchen.html">
+              <span class="nav-item-main">
+                <span class="nav-icon-box"><i class="fa-solid fa-utensils"></i></span>
+                <span class="nav-label">Quản lý món ăn</span>
+              </span>
+            </a>
+          </section>
+        </nav>
+
+        <div class="admin-sidebar-profile">
+          <div class="admin-profile-avatar">KB</div>
+          <div class="admin-profile-copy">
+            <div class="admin-profile-name">Đầu Bếp Trưởng</div>
+            <div class="admin-profile-role">KITCHEN</div>
+          </div>
+          <button class="admin-logout-button" data-action="logout" title="Đăng xuất">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </aside>
+
+      <main class="admin-content-shell">
+        <header class="admin-topbar-shell">
+          <div class="admin-topbar-left">
+            <div class="admin-breadcrumb">
+              <span>Bộ phận bếp</span>
+              <i class="fa-solid fa-chevron-right"></i>
+              <strong class="current">Quản lý món ăn</strong>
+            </div>
+          </div>
+
+          <div class="admin-search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="kitchen-search-input" placeholder="Tìm kiếm tên món, số bàn hoặc ghi chú món..." />
+          </div>
+
+          <div class="admin-topbar-right">
+            <div class="admin-live-clock">
+              <i class="fa-regular fa-clock"></i>
+              <span id="live-clock-text">Live Bếp</span>
+            </div>
+            <div class="admin-noti-btn" title="Thông báo món mới">
+              <i class="fa-solid fa-bell"></i>
+              <span class="noti-badge"></span>
+            </div>
+          </div>
+        </header>
+
+        <section class="admin-main-content" style="display:grid; gap:1.25rem" id="dishes-section">
+          <!-- Kitchen Feature Description Box -->
+          <article class="dashboard-panel" style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#ffffff; border:none">
+            <div style="display:flex; align-items:center; gap:1rem">
+              <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, #3b82f6, #6366f1); display:grid; place-items:center; font-size:1.4rem; color:#fff; flex-shrink:0">
+                <i class="fa-solid fa-bowl-rice"></i>
+              </div>
+              <div>
+                <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:#ffffff">Quản lý món ăn & Cập nhật trạng thái chế biến</h3>
+                <p style="margin:0.25rem 0 0; color:#94a3b8; font-size:0.86rem; line-height:1.45">
+                  Bộ phận bếp chịu trách nhiệm tiếp nhận và chế biến các món ăn theo đơn hàng của khách. Xem danh sách các món cần thực hiện (tên món, số lượng, ghi chú từ khách) và sử dụng chức năng Cập nhật trạng thái món để chuyển tiến độ từ <span style="color:#fb7185; font-weight:700">Đang làm</span> sang <span style="color:#34d399; font-weight:700">Hoàn thành</span> giúp phục vụ kịp thời mang món tới khách.
+                </p>
+              </div>
+            </div>
+          </article>
+
+          <!-- Kitchen Date & Quick Filter Toolbar -->
+          <div class="dashboard-panel" style="padding:0.75rem 1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem">
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap">
+              <span style="font-weight:700; font-size:0.9rem; color:#111c2d"><i class="fa-solid fa-calendar-day text-accent" style="margin-right:0.3rem"></i>Ngày chế biến:</span>
+              <input type="date" id="kitchen-date-picker" style="padding:0.45rem 0.8rem; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.88rem; background:#ffffff" />
+              <button type="button" class="btn btn-primary btn-small" id="btn-kitchen-today" style="font-weight:700"><i class="fa-solid fa-calendar-check"></i> Hôm nay</button>
+              <button type="button" class="btn btn-secondary btn-small" id="btn-kitchen-all-dates" style="font-weight:700">Tất cả ngày</button>
+            </div>
+            <div style="font-size:0.82rem; color:#64748b; font-weight:600; display:flex; align-items:center; gap:0.4rem">
+              <span class="badge-inline" style="background:#dcfce7; color:#15803d; font-weight:800"><i class="fa-solid fa-circle-check"></i> READY</span>
+              <span>Chỉ hiển thị món Sẵn sàng, đã hoàn tất (COMPLETED) sẽ tự động ẩn</span>
+            </div>
+          </div>
+
+          <!-- Kanban Board columns -->
+          <section class="kanban-board">
+            <article class="kanban-column">
+              <div class="column-header">
+                <h3><i class="fa-solid fa-clock text-amber" style="margin-right:0.45rem"></i>Chờ chế biến</h3>
+                <span id="todo-count" class="count-pill">0</span>
+              </div>
+              <div class="kanban-list" id="board-todo"></div>
+            </article>
+
+            <article class="kanban-column">
+              <div class="column-header">
+                <h3><i class="fa-solid fa-fire text-rose" style="margin-right:0.45rem"></i>Đang làm</h3>
+                <span id="doing-count" class="count-pill">0</span>
+              </div>
+              <div class="kanban-list" id="board-doing"></div>
+            </article>
+
+            <article class="kanban-column">
+              <div class="column-header">
+                <h3><i class="fa-solid fa-circle-check text-success" style="margin-right:0.45rem"></i>Hoàn thành</h3>
+                <span id="done-count" class="count-pill">0</span>
+              </div>
+              <div class="kanban-list" id="board-done"></div>
+            </article>
+          </section>
+        </section>
+      </main>
+    </div>
+    <script src="./kitchen.js"></script>
+  </body>
+</html>

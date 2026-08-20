@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đặt món - AppDatMon</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="brand">
+          <div class="brand-mark"></div>
+          <div>
+            <span class="brand-label">AppDatMon</span>
+            <p class="brand-subtitle">Đặt món qua QR</p>
+          </div>
+        </div>
+        <nav class="site-nav">
+          <a href="index.html" class="nav-link">Trang chủ</a>
+          <a href="order.html" class="nav-link active">Order</a>
+          <a href="booking.html" class="nav-link">Đặt bàn</a>
+          <a href="review.html" class="nav-link">Đánh giá</a>
+          <a href="contact.html" class="nav-link">Liên hệ</a>
+        </nav>
+        <div class="header-actions">
+          <a href="login.html" class="btn btn-primary">Đăng nhập</a>
+        </div>
+      </header>
+
+      <main>
+        <section class="section card order-hero">
+          <div>
+            <span class="eyebrow">Order nhanh</span>
+            <h1>Quét QR bàn và gọi món trực tiếp</h1>
+            <p>Chọn món yêu thích, ghi chú yêu cầu và gửi order ngay trên điện thoại.</p>
+          </div>
+          <div class="hero-card hero-card-highlight">
+            <h3>Quét QR hoặc nhập mã bàn</h3>
+            <div class="input-group">
+              <input id="tableInput" type="text" placeholder="Nhập mã bàn hoặc QR" />
+              <button id="loadTableBtn" class="btn btn-primary btn-sm">Tải bàn</button>
+            </div>
+            <div class="table-info card-sm">
+              <div><strong>Bàn:</strong> <span id="tableNumber">#—</span></div>
+              <div><strong>Trạng thái:</strong> <span id="tableStatus">Chưa chọn</span></div>
+              <div><strong>Giờ vào:</strong> <span id="tableTime">—</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section split-grid">
+          <div>
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">Menu</span>
+                <h2>Danh sách món</h2>
+              </div>
+              <div class="filter-bar">
+                <input id="searchInput" type="search" placeholder="Tìm món..." />
+                <select id="categoryFilter">
+                  <option value="">Tất cả danh mục</option>
+                </select>
+              </div>
+            </div>
+            <div id="productGrid" class="products-grid"></div>
+          </div>
+
+          <aside class="cart-panel card">
+            <div class="cart-header">
+              <span>Giỏ hàng</span>
+              <span id="cartCount">0 món</span>
+            </div>
+            <div id="cartList" class="cart-list"></div>
+            <div class="order-summary">
+              <div class="row"><span>Tạm tính</span><strong id="cartSubtotal">0₫</strong></div>
+              <div class="row"><span>Phí phục vụ</span><strong>20.000₫</strong></div>
+              <div class="row total"><span>Tổng cộng</span><strong id="cartTotal">0₫</strong></div>
+            </div>
+            <button id="submitOrderBtn" class="btn btn-primary btn-block">Gửi Order</button>
+            <div class="note-block">
+              <label for="orderNote">Ghi chú món</label>
+              <textarea id="orderNote" rows="3" placeholder="Yêu cầu thêm, không cay,..."></textarea>
+            </div>
+          </aside>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div>
+          <h3>AppDatMon</h3>
+          <p>Thanh toán nhanh, phục vụ tận tâm và trải nghiệm đặt món thông minh.</p>
+        </div>
+        <div class="footer-links">
+          <a href="index.html">Trang chủ</a>
+          <a href="booking.html">Đặt bàn</a>
+          <a href="review.html">Đánh giá</a>
+          <a href="contact.html">Liên hệ</a>
+        </div>
+      </footer>
+    </div>
+    <script src="./script.js"></script>
+  </body>
+</html>

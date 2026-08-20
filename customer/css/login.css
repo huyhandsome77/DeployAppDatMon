@@ -1,0 +1,223 @@
+/*==========================================
+            LOGIN PAGE
+==========================================*/
+
+.login-page{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#111,#1b1b1b);
+    padding:40px 20px;
+}
+
+/*==========================================
+            LOGIN CARD
+==========================================*/
+
+.login-card{
+
+    width:100%;
+    max-width:460px;
+
+    background:#fff;
+
+    border-radius:20px;
+
+    padding:40px;
+
+    box-shadow:0 20px 40px rgba(0,0,0,.2);
+
+}
+
+.login-logo{
+
+    width:90px;
+
+    height:90px;
+
+    margin:auto;
+
+    border-radius:50%;
+
+    background:#c8102e;
+
+    color:white;
+
+    font-size:42px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+.login-card h1{
+
+    text-align:center;
+
+    margin:20px 0 10px;
+
+}
+
+.login-card p{
+
+    text-align:center;
+
+    color:#666;
+
+    margin-bottom:30px;
+
+}
+
+/*==========================================
+            TAB
+==========================================*/
+
+.login-tabs{
+
+    display:flex;
+
+    margin-bottom:30px;
+
+    border-radius:10px;
+
+    overflow:hidden;
+
+    border:1px solid #ddd;
+
+}
+
+.login-tabs button{
+
+    flex:1;
+
+    padding:14px;
+
+    border:none;
+
+    cursor:pointer;
+
+    background:#f3f3f3;
+
+    transition:.3s;
+
+    font-weight:600;
+
+}
+
+.login-tabs button.active{
+
+    background:#c8102e;
+
+    color:white;
+
+}
+
+/*==========================================
+            FORM
+==========================================*/
+
+.form-group{
+
+    display:flex;
+
+    flex-direction:column;
+
+    margin-bottom:18px;
+
+}
+
+.form-group label{
+
+    margin-bottom:8px;
+
+    font-weight:600;
+
+}
+
+.form-group input{
+
+    padding:14px;
+
+    border-radius:12px;
+
+    border:1px solid #ddd;
+
+    outline:none;
+
+    font-size:15px;
+
+    transition:.3s;
+
+}
+
+.form-group input:focus{
+
+    border-color:#c8102e;
+
+}
+
+.btn-block{
+
+    width:100%;
+
+}
+
+/*==========================================
+            BACK
+==========================================*/
+
+.back-home{
+
+    margin-top:25px;
+
+    text-align:center;
+
+}
+
+.back-home a{
+
+    text-decoration:none;
+
+    color:#c8102e;
+
+    font-weight:600;
+
+}
+
+.back-home a:hover{
+
+    text-decoration:underline;
+
+}
+
+/*==========================================
+            RESPONSIVE
+==========================================*/
+
+@media(max-width:576px){
+
+.login-card{
+
+padding:25px;
+
+}
+
+.login-logo{
+
+width:70px;
+height:70px;
+font-size:32px;
+
+}
+
+.login-card h1{
+
+font-size:28px;
+
+}
+
+}
