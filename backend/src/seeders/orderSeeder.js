@@ -1,4 +1,4 @@
-const { Order, OrderItem, Product } = require('../models');
+const { Order, OrderItem, Product, User } = require('../models');
 
 const seedOrders = async () => {
     try {
@@ -6,6 +6,9 @@ const seedOrders = async () => {
         if (count < 5) {
             const products = await Product.findAll();
             if (products.length === 0) return;
+
+            const existingUser = await User.findOne();
+            const validUserId = existingUser ? existingUser.id : null;
 
             const p1 = products[0]; // Sushi Cá Hồi (150k)
             const p2 = products[1] || products[0]; // Sashimi (450k)
@@ -18,7 +21,7 @@ const seedOrders = async () => {
             const ordersData = [
                 {
                     table_id: 1,
-                    user_id: 2,
+                    user_id: validUserId,
                     totalPrice: price1 * 2 + price3,
                     finalPrice: price1 * 2 + price3,
                     status: 'CONFIRMED',
@@ -30,7 +33,7 @@ const seedOrders = async () => {
                 },
                 {
                     table_id: 2,
-                    user_id: 3,
+                    user_id: validUserId,
                     totalPrice: price2 + price3 * 2,
                     finalPrice: price2 + price3 * 2,
                     status: 'PREPARING',
@@ -42,7 +45,7 @@ const seedOrders = async () => {
                 },
                 {
                     table_id: 3,
-                    user_id: 2,
+                    user_id: validUserId,
                     totalPrice: price1 * 3,
                     finalPrice: price1 * 3,
                     status: 'READY',
@@ -53,7 +56,7 @@ const seedOrders = async () => {
                 },
                 {
                     table_id: 4,
-                    user_id: 3,
+                    user_id: validUserId,
                     totalPrice: price1 + price2,
                     finalPrice: price1 + price2,
                     status: 'COMPLETED',
@@ -66,7 +69,7 @@ const seedOrders = async () => {
                 },
                 {
                     table_id: 5,
-                    user_id: 2,
+                    user_id: validUserId,
                     totalPrice: price2 * 2,
                     finalPrice: price2 * 2,
                     status: 'COMPLETED',

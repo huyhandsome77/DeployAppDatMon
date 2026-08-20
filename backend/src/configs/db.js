@@ -16,6 +16,7 @@ const dialect = databaseUrl || isSupabaseHost
     : (configuredDialect || 'mysql');
 const isLocalhost = !databaseUrl && (process.env.DB_HOST === '127.0.0.1' || process.env.DB_HOST === 'localhost');
 const useSsl = dialect === 'postgres' && (!isLocalhost || process.env.DB_SSL === 'true');
+const selectedDialectModule = dialect === 'postgres' ? pg : mysql2;
 
 const sequelizeOptions = {
         host: process.env.DB_HOST || '127.0.0.1',
