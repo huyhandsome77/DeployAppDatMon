@@ -14,20 +14,26 @@ const isSupabaseHost = /supabase\.(co|com)/i.test(process.env.DB_HOST || '');
 const dialect = databaseUrl || isSupabaseHost
     ? 'postgres'
     : (configuredDialect || 'mysql');
-const isProduction = process.env.NODE_ENV === 'production';
-const selectedDialectModule = dialect === 'postgres' ? pg : mysql2;
+const isLocalhost = !databaseUrl && (process.env.DB_HOST === '127.0.0.1' || process.env.DB_HOST === 'localhost');
+const useSsl = dialect === 'postgres' && (!isLocalhost || process.env.DB_SSL === 'true');
 
 const sequelizeOptions = {
         host: process.env.DB_HOST || '127.0.0.1',
         port: process.env.DB_PORT || process.env.PORT_DB || (dialect === 'postgres' ? 5432 : 3306),
         dialect: dialect,
-        dialectModule: selectedDialectModule, // <-- Dòng này giải quyết triệt để lỗi "Please install mysql2 package manually"
-        dialectOptions: isProduction && (dialect === 'postgres' || process.env.DB_SSL === 'true') ? {
+        dialectModule: selectedDialectModule,
+        dialectOptions: useSsl ? {
             ssl: {
                 require: true,
                 rejectUnauthorized: false
             }
         } : {},
+        pool: {
+            max: 5,
+            min: 0,
+            acquire: 30000,
+            idle: 10000
+        },
         logging: false,
     };
 
