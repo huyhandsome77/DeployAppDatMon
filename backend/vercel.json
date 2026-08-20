@@ -8,7 +8,11 @@
         "includeFiles": [
           "node_modules/mysql2/**",
           "node_modules/pg/**",
-          "node_modules/swagger-ui-dist/**"
+          "node_modules/swagger-ui-dist/**",
+          "customer/**",
+          "admin/**",
+          "uploads/**",
+          "docs/**"
         ]
       }
     }

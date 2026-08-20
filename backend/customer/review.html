@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>FutureSuShi | Đánh giá</title>
+
+    <!-- Google Font -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <!-- FontAwesome -->
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- CSS -->
+
+    <link rel="stylesheet" href="./css/styles.css">
+
+    <link rel="stylesheet" href="./css/layout.css">
+
+    <link rel="stylesheet" href="./css/review.css">
+
+    <link rel="stylesheet" href="./css/responsive.css">
+
+</head>
+
+<body>
+
+<div class="ambient ambient-left"></div>
+
+<div class="ambient ambient-right"></div>
+
+<div id="header-container"></div>
+
+<section class="hero">
+
+<div class="hero-left">
+
+<div class="hero-tag">
+
+⭐ Customer Review
+
+</div>
+
+<h1 class="hero-title">
+
+Chia sẻ
+
+<span>
+
+cảm nhận
+
+</span>
+
+</h1>
+
+<p class="hero-desc">
+
+Mỗi đánh giá của bạn sẽ giúp FutureSuShi
+phục vụ khách hàng tốt hơn.
+
+</p>
+
+</div>
+
+<div class="hero-right">
+
+<img src="./assets/banner.png">
+
+</div>
+
+</section>
+
+<section class="section">
+
+<div class="section-title">
+
+<span>
+
+REVIEW
+
+</span>
+
+<h2>
+
+Đánh giá nhà hàng
+
+</h2>
+
+<p>
+
+Chúng tôi luôn lắng nghe ý kiến của khách hàng.
+
+</p>
+
+</div>
+
+<div class="review-layout">
+
+<div class="review-form card">
+
+<form id="reviewForm">
+
+    <!--================ RATING ================-->
+
+<div class="rating-box">
+
+    <label>
+
+        Đánh giá của bạn
+
+    </label>
+
+    <div class="stars" id="starRating">
+
+        <i class="fa-regular fa-star" data-value="1"></i>
+
+        <i class="fa-regular fa-star" data-value="2"></i>
+
+        <i class="fa-regular fa-star" data-value="3"></i>
+
+        <i class="fa-regular fa-star" data-value="4"></i>
+
+        <i class="fa-regular fa-star" data-value="5"></i>
+
+    </div>
+
+</div>
+
+<div class="field">
+
+    <label>
+
+        Tiêu đề
+
+    </label>
+
+    <input
+
+        id="reviewTitle"
+
+        type="text"
+
+        placeholder="Ví dụ: Nhà hàng rất tuyệt">
+
+</div>
+
+<div class="field">
+
+    <label>
+
+        Nội dung
+
+    </label>
+
+    <textarea
+
+        id="reviewContent"
+
+        rows="6"
+
+        placeholder="Hãy chia sẻ cảm nhận của bạn..."></textarea>
+
+</div>
+
+<button
+
+    class="btn btn-primary btn-block"
+
+    type="submit">
+
+    Gửi đánh giá
+
+</button>
+
+</form>
+
+</div>
+
+
+<div class="review-info card">
+
+    <h3>
+
+        FutureSuShi
+
+    </h3>
+
+    <p>
+
+        Chúng tôi luôn trân trọng mọi đánh giá của khách hàng.
+
+    </p>
+
+    <div class="review-stat">
+
+        <div>
+
+            <h2>
+
+                4.9
+
+            </h2>
+
+            <span>
+
+                Trung bình
+
+            </span>
+
+        </div>
+
+        <div>
+
+            <h2>
+
+                500+
+
+            </h2>
+
+            <span>
+
+                Đánh giá
+
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+
+<section class="section">
+
+<div class="section-title">
+
+<span>
+
+REVIEWS
+
+</span>
+
+<h2>
+
+Khách hàng nói gì
+
+</h2>
+
+</div>
+
+<div
+
+id="reviewList"
+
+class="review-list">
+
+<div class="empty">
+
+Chưa có đánh giá.
+
+</div>
+
+</div>
+
+</section>
+
+
+<footer class="footer">
+
+<div class="footer-bottom">
+
+© 2026 FutureSuShi
+
+</div>
+
+</footer>
+
+<script src="./js/app.js"></script>
+
+<script src="./js/review.js"></script>
+
+</body>
+
+</html>

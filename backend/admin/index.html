@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FutureSushi Admin</title>
+    <meta name="description" content="Admin dashboard for FutureSushi backend" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-left"></div>
+    <div class="ambient ambient-right"></div>
+    <div id="app" class="app-shell"></div>
+
+    <!-- Dedicated Payment Checkout Modal (Tiền mặt & PayOS) -->
+    <div class="modal-backdrop hidden" id="staff-payment-modal">
+      <div class="modal-card" style="max-width:500px">
+        <div class="modal-head">
+          <div>
+            <h3 class="modal-title" id="payment-modal-title">💳 Thanh toán Đơn hàng #0</h3>
+            <div style="font-size:0.83rem; color:#64748b" id="payment-modal-sub">Vị trí: Bàn #1 • Khách hàng: Khách vãng lai</div>
+          </div>
+          <button class="btn btn-ghost btn-small" id="close-staff-payment-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body" style="display:grid; gap:1.2rem; padding:1rem 0">
+          <!-- Order Total Summary Header -->
+          <div style="background:linear-gradient(135deg, #004ac6, #1e3a8a); color:#ffffff; padding:1.2rem; border-radius:18px; text-align:center; box-shadow:0 8px 20px rgba(0,74,198,0.25)">
+            <div style="font-size:0.82rem; opacity:0.85; text-transform:uppercase; font-weight:700; letter-spacing:0.5px">Tổng Tiền Cần Thanh Toán</div>
+            <div style="font-size:2rem; font-weight:900; margin:0.2rem 0" id="payment-modal-amount">0 ₫</div>
+            <div style="font-size:0.8rem; opacity:0.9" id="payment-modal-items-count">0 món ăn trong đơn hàng</div>
+          </div>
+
+          <!-- Payment Method Selector Tabs -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; background:#f1f5f9; padding:0.3rem; border-radius:12px">
+            <button type="button" class="btn btn-primary" id="tab-pay-cash" style="font-size:0.88rem; padding:0.6rem"><i class="fa-solid fa-money-bill-wave"></i> 💵 Tiền mặt</button>
+            <button type="button" class="btn btn-secondary" id="tab-pay-payos" style="font-size:0.88rem; padding:0.6rem"><i class="fa-solid fa-qrcode"></i> 📲 Chuyển khoản PayOS</button>
+          </div>
+
+          <!-- Panel 1: Tiền mặt -->
+          <div id="panel-pay-cash" style="display:grid; gap:1rem">
+            <div style="background:#f8fafc; padding:1rem; border-radius:14px; border:1px solid #cbd5e1">
+              <label style="font-size:0.85rem; font-weight:700; color:#111c2d; display:block; margin-bottom:0.4rem">Tiền khách đưa (₫)</label>
+              <input type="number" id="cash-given-input" placeholder="Ví dụ: 500000" style="width:100%; font-size:1.1rem; padding:0.6rem; border-radius:10px; border:1px solid #94a3b8; font-weight:800" />
+              <div style="margin-top:0.6rem; display:flex; justify-content:space-between; align-items:center; font-size:0.9rem">
+                <span style="color:#64748b">Tiền thừa trả khách:</span>
+                <strong style="font-size:1.1rem; color:#15803d" id="cash-change-text">0 ₫</strong>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-confirm-cash-paid" style="width:100%; padding:0.8rem; font-size:1rem; font-weight:800">
+              <i class="fa-solid fa-circle-check"></i> Xác Nhận Đã Thu Tiền Mặt
+            </button>
+          </div>
+
+          <!-- Panel 2: Chuyển khoản PayOS / VietQR -->
+          <div id="panel-pay-payos" class="hidden" style="display:grid; gap:1rem; text-align:center">
+            <div style="background:#ffffff; padding:1.2rem; border-radius:18px; border:2px solid #3b82f6; box-shadow:0 6px 18px rgba(0,74,198,0.1)">
+              <div style="font-size:0.82rem; font-weight:800; color:#004ac6; text-transform:uppercase">Mã QR Thanh Toán PayOS / VietQR</div>
+              <img id="payos-qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=PayOSLoading" alt="PayOS QR" style="width:200px; height:200px; border-radius:12px; margin:0.8rem auto; display:block; border:1px solid #cbd5e1" />
+              <div style="font-size:0.82rem; color:#1e293b; font-weight:700" id="payos-qr-status">⏳ Đang tạo liên kết thanh toán PayOS...</div>
+              <code style="display:block; margin-top:0.4rem; background:#f1f5f9; padding:0.35rem; border-radius:6px; font-size:0.75rem" id="payos-order-code">PAYOS-DH0</code>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem">
+              <a id="btn-open-payos-url" href="#" target="_blank" class="btn btn-secondary btn-small" style="padding:0.6rem"><i class="fa-solid fa-arrow-up-right-from-square"></i> Mở PayOS Web</a>
+              <button class="btn btn-secondary btn-small" id="btn-check-payos-status" style="padding:0.6rem"><i class="fa-solid fa-rotate"></i> Kiểm tra PayOS</button>
+            </div>
+
+            <button class="btn btn-primary" id="btn-confirm-transfer-paid" style="width:100%; padding:0.8rem; font-size:1rem; font-weight:800">
+              <i class="fa-solid fa-circle-check"></i> Xác Nhận Đã Nhận Chuyển Khoản
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./app.js?v=1.0.7"></script>
+  </body>
+</html>

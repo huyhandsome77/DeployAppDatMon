@@ -1,0 +1,9 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const rows = document.querySelectorAll('tbody tr');
+  rows.forEach((row) => {
+    row.addEventListener('click', () => {
+      rows.forEach((r) => r.classList.remove('row-active'));
+      row.classList.add('row-active');
+    });
+  });
+});

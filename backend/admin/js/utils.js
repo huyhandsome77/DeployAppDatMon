@@ -1,0 +1,87 @@
+// Shared Utility & Formatting Helpers
+
+export function formatNumber(value) {
+  const numeric = Number(value ?? 0);
+  return Number.isFinite(numeric) ? numeric.toLocaleString('vi-VN') : '0';
+}
+
+export function formatCurrency(value) {
+  const numeric = Number(value ?? 0);
+  return Number.isFinite(numeric)
+    ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(numeric)
+    : '0 đ';
+}
+
+export function formatDateTime(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('vi-VN', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(date);
+}
+
+export function escapeHtml(str) {
+  if (typeof str !== 'string') return str ?? '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+export function userInitials(user) {
+  const name = user?.fullName || user?.username || 'Guest';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
+export function statusChip(typeClass, label) {
+  return `<span class="badge-inline ${typeClass}">${escapeHtml(label)}</span>`;
+}
+
+export function tableStatusClass(status) {
+  switch (String(status).toUpperCase()) {
+    case 'AVAILABLE': return 'st-available';
+    case 'OCCUPIED': return 'st-occupied';
+    case 'BOOKED': return 'st-booked';
+    case 'CLEANING': return 'st-cleaning';
+    default: return 'st-available';
+  }
+}
+
+export function orderStatusClass(status) {
+  switch (String(status).toUpperCase()) {
+    case 'PENDING': return 'badge-warning';
+    case 'CONFIRMED':
+    case 'PREPARING': return 'badge-info';
+    case 'READY': return 'badge-primary';
+    case 'COMPLETED': return 'badge-success';
+    case 'CANCELLED': return 'badge-danger';
+    default: return 'badge-neutral';
+  }
+}
+
+export function paymentStatusClass(status) {
+  switch (String(status).toUpperCase()) {
+    case 'PAID': return 'badge-success';
+    case 'UNPAID': return 'badge-warning';
+    case 'REFUNDED': return 'badge-danger';
+    default: return 'badge-neutral';
+  }
+}
+
+export function reservationStatusClass(status) {
+  switch (String(status).toUpperCase()) {
+    case 'CONFIRMED': return 'badge-info';
+    case 'CHECKED_IN': return 'badge-success';
+    case 'CANCELLED': return 'badge-danger';
+    case 'PENDING':
+    default: return 'badge-warning';
+  }
+}

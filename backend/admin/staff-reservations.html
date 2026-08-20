@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Đặt Bàn - Staff Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="./staff.css" />
+  </head>
+  <body>
+    <div class="admin-new-shell">
+      <aside class="admin-sidebar-shell">
+        <div class="admin-brand-box">
+          <div class="admin-brand-badge">
+            <div class="admin-brand-logo-wrap">
+              <img src="/uploads/logo.png" alt="FutureSushi Logo" class="admin-brand-logo" onerror="this.onerror=null; this.src='uploads/logo.png';" />
+            </div>
+            <div>
+              <h1 class="admin-brand-title">FutureSushi</h1>
+              <p class="admin-brand-subtitle">Nhân viên Phục vụ</p>
+            </div>
+          </div>
+          <div class="admin-system-status">
+            <span class="status-pulse-dot"></span>
+            <span>Đang trực ca phục vụ</span>
+          </div>
+        </div>
+
+        <nav class="admin-sidebar-nav" aria-label="Navigation">
+          <section class="admin-sidebar-section">
+            <div class="admin-sidebar-section-title">CHỨC NĂNG PHỤC VỤ</div>
+            <a class="nav-item" href="staff.html">
+              <span class="nav-item-main">
+                <span class="nav-icon-box"><i class="fa-solid fa-receipt"></i></span>
+                <span class="nav-label">Quản lý đơn hàng</span>
+              </span>
+            </a>
+            <a class="nav-item" href="staff-tables.html">
+              <span class="nav-item-main">
+                <span class="nav-icon-box"><i class="fa-solid fa-table-cells"></i></span>
+                <span class="nav-label">Quản lý bàn</span>
+              </span>
+            </a>
+            <a class="nav-item active" href="staff-reservations.html">
+              <span class="nav-item-main">
+                <span class="nav-icon-box"><i class="fa-solid fa-calendar-check"></i></span>
+                <span class="nav-label">Quản lý đặt bàn</span>
+              </span>
+            </a>
+            <a class="nav-item" href="staff-points.html">
+              <span class="nav-item-main">
+                <span class="nav-icon-box"><i class="fa-solid fa-coins"></i></span>
+                <span class="nav-label">Quản lý tích điểm</span>
+              </span>
+            </a>
+          </section>
+        </nav>
+
+        <div class="admin-sidebar-profile">
+          <div class="admin-profile-avatar">ST</div>
+          <div class="admin-profile-copy">
+            <div class="admin-profile-name">Nhân Viên Phục Vụ</div>
+            <div class="admin-profile-role">STAFF</div>
+          </div>
+          <button class="admin-logout-button" data-action="logout" title="Đăng xuất">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </aside>
+
+      <main class="admin-content-shell">
+        <header class="admin-topbar-shell">
+          <div class="admin-topbar-left">
+            <div class="admin-breadcrumb">
+              <span>Phục vụ</span>
+              <i class="fa-solid fa-chevron-right"></i>
+              <strong class="current">Quản lý đặt bàn</strong>
+            </div>
+          </div>
+
+          <div class="admin-search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="staff-search-input" placeholder="Tìm kiếm tên khách, SĐT hoặc mã đặt bàn..." />
+          </div>
+
+          <div class="admin-topbar-right">
+            <div class="admin-live-clock">
+              <i class="fa-regular fa-clock"></i>
+              <span id="live-clock-text">Live Staff</span>
+            </div>
+            <div class="admin-noti-btn" title="Thông báo">
+              <i class="fa-solid fa-bell"></i>
+              <span class="noti-badge"></span>
+            </div>
+          </div>
+        </header>
+
+        <section class="admin-main-content" style="display:grid; gap:1.25rem">
+          <!-- Metric KPI Summary Strip -->
+          <section class="kpi-summary-strip">
+            <article class="kpi-mini-card">
+              <div class="kpi-mini-icon blue"><i class="fa-solid fa-calendar-check"></i></div>
+              <div class="kpi-mini-copy">
+                <span class="kpi-mini-label">Đã xác nhận đặt</span>
+                <span class="kpi-mini-value" id="metric-res-confirmed">0</span>
+              </div>
+            </article>
+            <article class="kpi-mini-card">
+              <div class="kpi-mini-icon green"><i class="fa-solid fa-user-check"></i></div>
+              <div class="kpi-mini-copy">
+                <span class="kpi-mini-label">Khách đã Check-in</span>
+                <span class="kpi-mini-value" id="metric-res-checked">0</span>
+              </div>
+            </article>
+            <article class="kpi-mini-card">
+              <div class="kpi-mini-icon amber"><i class="fa-solid fa-clock"></i></div>
+              <div class="kpi-mini-copy">
+                <span class="kpi-mini-label">Chờ đến giờ</span>
+                <span class="kpi-mini-value" id="metric-res-pending">0</span>
+              </div>
+            </article>
+          </section>
+
+          <!-- Quản lý đặt bàn Panel -->
+          <section class="dashboard-panel" id="reservations-section">
+            <div class="dashboard-panel-header" style="display:flex; flex-direction:column; gap:1rem">
+              <div style="display:flex; justify-content:space-between; align-items:center; width:100%">
+                <div>
+                  <h3 class="dashboard-panel-title"><i class="fa-solid fa-calendar-check text-accent" style="margin-right:0.4rem"></i>Quản lý đặt bàn trước</h3>
+                  <p class="dashboard-panel-copy">Theo dõi lịch đặt bàn trước, xác nhận nhận bàn (Check-in) hoặc hủy lịch đặt khi ở trạng thái Chờ duyệt.</p>
+                </div>
+              </div>
+              <div id="reservation-filter-pills" style="display:flex; gap:0.4rem; overflow-x:auto; width:100%; padding-bottom:2px"></div>
+            </div>
+            
+            <!-- Cards Grid Layout -->
+            <div class="reservations-grid" id="reservations-cards-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; margin-top: 1rem;"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="./staff.js?v=1.0.4"></script>
+  </body>
+</html>

@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>FutureSuShi | Japanese Restaurant</title>
+
+
+    <!-- Google Font -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+
+    <!-- FontAwesome -->
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+
+    <!-- CSS -->
+
+    <link rel="stylesheet"
+          href="./css/styles.css">
+
+    <link rel="stylesheet"
+          href="./css/layout.css">
+
+    <link rel="stylesheet"
+          href="./css/home.css">
+
+    <link rel="stylesheet"
+          href="./css/responsive.css">
+
+    <link rel="stylesheet"
+          href="./css/qr.css">
+
+</head>
+
+
+<body>
+
+
+<!-- ==================================================
+                    AMBIENT
+================================================== -->
+
+<div class="ambient ambient-left"></div>
+
+<div class="ambient ambient-right"></div>
+
+
+<!-- ==================================================
+                    HEADER
+================================================== -->
+
+<div id="header-container"></div>
+
+
+<!-- ==================================================
+                    QR MODAL
+================================================== -->
+
+<div id="qrModal"
+     class="qr-modal hidden">
+
+    <div class="qr-modal-overlay"></div>
+
+
+    <div class="qr-modal-card">
+
+
+        <button
+            type="button"
+            id="closeQrModal"
+            class="qr-close">
+
+            <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+
+        <div class="qr-icon">
+
+            <i class="fa-solid fa-qrcode"></i>
+
+        </div>
+
+
+        <h2>
+            Quét mã QR tại bàn
+        </h2>
+
+
+        <p>
+            Quét mã QR trên bàn để mở thực đơn
+            và đặt món.
+        </p>
+
+
+        <!-- CAMERA -->
+
+        <div
+            id="qr-reader"
+            class="qr-reader">
+        </div>
+
+
+        <!-- STATUS -->
+
+        <div
+            id="qr-status"
+            class="qr-status">
+
+            <i class="fa-solid fa-camera"></i>
+
+            Đang chờ quét mã QR...
+
+        </div>
+
+
+        <!-- DIVIDER -->
+
+        <div class="qr-divider">
+
+            <span>
+                HOẶC
+            </span>
+
+        </div>
+
+
+        <!-- QR LINK -->
+
+        <div class="qr-link-form">
+
+            <label for="qrLinkInput">
+                Nhập hoặc dán link QR
+            </label>
+
+
+            <div class="qr-input-group">
+
+                <input
+                    id="qrLinkInput"
+                    type="text"
+                    placeholder="https://appdatmon.com/table/2">
+
+
+                <button
+                    type="button"
+                    id="qrLinkBtn"
+                    class="btn btn-primary">
+
+                    <i class="fa-solid fa-arrow-right"></i>
+
+                </button>
+
+            </div>
+
+
+            <small>
+                Ví dụ:
+                https://appdatmon.com/table/2
+            </small>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<!-- ==================================================
+                        HERO
+================================================== -->
+
+<section class="hero">
+
+
+    <div class="hero-left">
+
+
+        <div class="hero-tag">
+
+            🍣 Japanese Restaurant
+
+        </div>
+
+
+        <h1 class="hero-title">
+
+            Taste The Future
+
+            <span>
+                of Sushi
+            </span>
+
+        </h1>
+
+
+        <p class="hero-desc">
+
+            Khám phá thế giới ẩm thực Nhật Bản
+            với nguyên liệu tươi ngon,
+            đầu bếp chuyên nghiệp và hệ thống
+            đặt món hiện đại.
+
+        </p>
+
+
+        <div class="hero-btn">
+
+
+            <!-- KHÔNG ĐI THẲNG MENU -->
+
+            <a
+                href="#qr-section"
+                class="btn btn-primary">
+
+                <i class="fa-solid fa-qrcode"></i>
+
+                Quét QR để đặt món
+
+            </a>
+
+
+            <a
+                href="booking.html"
+                class="btn btn-secondary">
+
+                Đặt bàn
+
+            </a>
+
+
+        </div>
+
+
+    </div>
+
+
+    <div class="hero-right">
+
+        <img
+            src="./assets/banner.png"
+            alt="FutureSuShi">
+
+    </div>
+
+
+</section>
+
+
+
+
+<!-- ==================================================
+                    FEATURE
+================================================== -->
+
+<section class="feature">
+
+
+    <div class="section-title">
+
+        <span>
+            WHY CHOOSE US
+        </span>
+
+
+        <h2>
+            Trải nghiệm FutureSuShi
+        </h2>
+
+
+        <p>
+            Không chỉ là một nhà hàng Nhật Bản,
+            FutureSuShi còn mang đến trải nghiệm
+            đặt món thông minh, phục vụ nhanh
+            và không gian hiện đại.
+        </p>
+
+    </div>
+
+
+    <div class="feature-grid">
+
+
+        <div class="feature-card hover-up">
+
+            <i class="fa-solid fa-utensils"></i>
+
+            <h3>
+                Món ăn chất lượng
+            </h3>
+
+            <p>
+                Nguyên liệu nhập mới mỗi ngày,
+                đảm bảo độ tươi ngon.
+            </p>
+
+        </div>
+
+
+        <div class="feature-card hover-up">
+
+            <i class="fa-solid fa-qrcode"></i>
+
+            <h3>
+                Quét QR
+            </h3>
+
+            <p>
+                Đặt món nhanh chóng ngay tại bàn
+                chỉ với một lần quét.
+            </p>
+
+        </div>
+
+
+        <div class="feature-card hover-up">
+
+            <i class="fa-solid fa-calendar-check"></i>
+
+            <h3>
+                Đặt bàn Online
+            </h3>
+
+            <p>
+                Chọn thời gian phù hợp,
+                không cần gọi điện.
+            </p>
+
+        </div>
+
+
+        <div class="feature-card hover-up">
+
+            <i class="fa-solid fa-star"></i>
+
+            <h3>
+                Đánh giá trực tuyến
+            </h3>
+
+            <p>
+                Chia sẻ cảm nhận để giúp chúng tôi
+                phục vụ tốt hơn.
+            </p>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+<!-- ==================================================
+                        ABOUT
+================================================== -->
+
+<section class="section">
+
+
+    <div class="section-title">
+
+        <span>
+            ABOUT FUTURESUSHI
+        </span>
+
+
+        <h2>
+            Hương vị Nhật Bản giữa lòng thành phố
+        </h2>
+
+    </div>
+
+
+    <div class="about-home">
+
+
+        <div class="about-image">
+
+            <img
+                src="./assets/images/about.jpg"
+                alt="FutureSuShi">
+
+        </div>
+
+
+        <div class="about-content">
+
+            <h2>
+                Đầu bếp Nhật Bản
+            </h2>
+
+
+            <p>
+                Với đội ngũ đầu bếp nhiều năm kinh nghiệm
+                cùng nguyên liệu nhập khẩu chất lượng,
+                FutureSuShi mang đến những món sushi,
+                sashimi và donburi chuẩn vị Nhật.
+            </p>
+
+
+            <p>
+                Không gian hiện đại kết hợp hệ thống
+                gọi món bằng QR giúp khách hàng có
+                trải nghiệm tiện lợi và nhanh chóng.
+            </p>
+
+
+            <a
+                href="about.html"
+                class="btn btn-primary">
+
+                Xem thêm
+
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ==================================================
+                    BEST SELLER
+================================================== -->
+
+<section class="section">
+
+
+    <div class="section-title">
+
+        <span>
+            BEST SELLER
+        </span>
+
+
+        <h2>
+            Món ăn nổi bật
+        </h2>
+
+    </div>
+
+
+    <div class="feature-grid">
+
+
+        <div class="feature-card hover-up">
+
+            <img
+                src="./assets/images/sushi1.png"
+                alt="Sushi Cá Hồi">
+
+
+            <h3>
+                Sushi Cá Hồi
+            </h3>
+
+
+            <p>
+                Cá hồi Na Uy tươi ngon.
+            </p>
+
+        </div>
+
+
+        <div class="feature-card hover-up">
+
+            <img
+                src="./assets/images/sashimi.png"
+                alt="Sashimi Tổng Hợp">
+
+
+            <h3>
+                Sashimi Tổng Hợp
+            </h3>
+
+
+            <p>
+                Thưởng thức vị tươi nguyên.
+            </p>
+
+        </div>
+
+
+        <div class="feature-card hover-up">
+
+            <img
+                src="./assets/images/udon.png"
+                alt="Mì Udon">
+
+
+            <h3>
+                Mì Udon
+            </h3>
+
+
+            <p>
+                Nước dùng đậm đà chuẩn Nhật.
+            </p>
+
+        </div>
+
+
+        <div class="feature-card hover-up">
+
+            <img
+                src="./assets/images/donburi.png"
+                alt="Donburi Bò">
+
+
+            <h3>
+                Donburi Bò
+            </h3>
+
+
+            <p>
+                Món ăn được yêu thích nhất.
+            </p>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+<!-- ==================================================
+                        CTA
+================================================== -->
+
+<section class="section">
+
+
+    <div
+        class="card"
+        style="padding:60px;text-align:center;">
+
+
+        <h2>
+            Đặt bàn ngay hôm nay
+        </h2>
+
+
+        <p
+            style="margin:20px 0;color:var(--muted);">
+
+            Trải nghiệm ẩm thực Nhật Bản hiện đại
+            cùng FutureSuShi.
+
+        </p>
+
+
+        <a
+            href="booking.html"
+            class="btn btn-primary">
+
+            Đặt bàn ngay
+
+        </a>
+
+
+    </div>
+
+</section>
+
+
+<!-- ==================================================
+                        FOOTER
+================================================== -->
+
+<footer class="footer">
+
+
+    <div class="footer-top">
+
+
+        <!-- BRAND -->
+
+        <div>
+
+            <div class="footer-logo">
+
+                <img
+                    src="./assets/logo.png"
+                    alt="FutureSuShi">
+
+                <span>
+                    FutureSuShi
+                </span>
+
+            </div>
+
+
+            <p>
+                FutureSuShi là nhà hàng Nhật Bản hiện đại,
+                mang đến trải nghiệm đặt món thông minh
+                bằng QR, đặt bàn trực tuyến và phục vụ
+                chuyên nghiệp.
+            </p>
+
+
+            <div class="footer-social">
+
+                <a href="#">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+
+                <a href="#">
+                    <i class="fab fa-instagram"></i>
+                </a>
+
+                <a href="#">
+                    <i class="fab fa-tiktok"></i>
+                </a>
+
+                <a href="#">
+                    <i class="fab fa-youtube"></i>
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+
+        <div>
+
+            <h4>
+                Điều hướng
+            </h4>
+
+
+            <ul>
+
+                <li>
+                    <a href="index.html">
+                        Trang chủ
+                    </a>
+                </li>
+
+
+                <li>
+                    <a href="#qr-section">
+                        Quét QR để xem thực đơn
+                    </a>
+                </li>
+
+
+                <li>
+                    <a href="booking.html">
+                        Đặt bàn
+                    </a>
+                </li>
+
+
+                <li>
+                    <a href="review.html">
+                        Đánh giá
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+
+        <!-- SUPPORT -->
+
+        <div>
+
+            <h4>
+                Hỗ trợ
+            </h4>
+
+
+            <ul>
+
+                <li>
+                    <a href="contact.html">
+                        Liên hệ
+                    </a>
+                </li>
+
+
+                <li>
+                    <a href="about.html">
+                        Giới thiệu
+                    </a>
+                </li>
+
+
+                <li>
+                    <a href="login.html">
+                        Đăng nhập
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+
+        <!-- INFORMATION -->
+
+        <div>
+
+            <h4>
+                Thông tin
+            </h4>
+
+
+            <ul>
+
+                <li>
+                    📍 TP. Hồ Chí Minh
+                </li>
+
+
+                <li>
+                    ☎ 0901 234 567
+                </li>
+
+
+                <li>
+                    ✉ futuresushi@gmail.com
+                </li>
+
+
+                <li>
+                    ⏰ 09:00 - 22:00
+                </li>
+
+            </ul>
+
+        </div>
+
+
+    </div>
+
+
+    <div class="footer-bottom">
+
+        © 2026 FutureSuShi |
+        Developed by Team FutureSuShi
+
+    </div>
+
+
+</footer>
+
+
+<!-- ==================================================
+                        SCRIPT
+================================================== -->
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script src="./js/app.js"></script>
+
+<script src="./js/auth.js"></script>
+
+<script src="./js/qr.js"></script>
+
+
+</body>
+
+</html>

@@ -9,10 +9,23 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 
-const customerDir = path.join(__dirname, '..', '..', 'customer');
-const adminDir = path.join(__dirname, '..', '..', 'admin');
-const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
-const docsDir = path.join(__dirname, '..', '..', 'docs');
+const fs = require('fs');
+
+const resolveDir = (dirName) => {
+    const candidates = [
+        path.join(__dirname, '..', dirName),
+        path.join(__dirname, '..', '..', dirName)
+    ];
+    for (const c of candidates) {
+        if (fs.existsSync(c)) return c;
+    }
+    return candidates[0];
+};
+
+const customerDir = resolveDir('customer');
+const adminDir = resolveDir('admin');
+const uploadsDir = resolveDir('uploads');
+const docsDir = resolveDir('docs');
 
 // Static Folder for Uploads
 app.use('/uploads', express.static(uploadsDir));
