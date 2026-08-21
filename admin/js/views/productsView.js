@@ -1,5 +1,5 @@
 // Modular Products View (Giao diện Quản lý Sản Phẩm)
-import { formatCurrency, formatNumber, escapeHtml, statusChip } from '../utils.js';
+import { formatCurrency, formatNumber, escapeHtml, statusChip, resolveImageUrl } from '../utils.js';
 
 export function renderProductsGrid(products, activeFilter = 'ALL', categories = []) {
   if (!products || products.length === 0) {
@@ -15,17 +15,19 @@ export function renderProductsGrid(products, activeFilter = 'ALL', categories = 
     return `<div class="empty-state"><strong>Không tìm thấy món ăn trong danh mục này</strong></div>`;
   }
 
+  const defaultFoodPlaceholder = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80';
+
   return `
     <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:1rem">
       ${filtered.map(item => {
         const catObj = categories.find(c => String(c.id) === String(item.category_id));
         const catName = catObj ? catObj.name : item.category_id ? `#${item.category_id}` : 'Khác';
-        const imgUrl = item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80';
+        const imgUrl = resolveImageUrl(item.image) || defaultFoodPlaceholder;
 
         return `
           <article class="table-card-clean" style="padding:0; overflow:hidden">
             <div style="height:140px; background:#f1f5f9; position:relative; overflow:hidden">
-              <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.name)}" style="width:100%; height:100%; object-fit:cover" />
+              <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" style="width:100%; height:100%; object-fit:cover" onerror="this.onerror=null;this.src='${defaultFoodPlaceholder}'" />
               <span class="badge-inline" style="position:absolute; top:0.5rem; right:0.5rem; background:rgba(15,23,42,0.75); color:#fff; backdrop-filter:blur(4px); font-size:0.75rem">
                 ${escapeHtml(catName)}
               </span>

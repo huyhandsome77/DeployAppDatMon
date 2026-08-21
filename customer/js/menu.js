@@ -474,15 +474,21 @@ function renderProducts() {
 ==================================================*/
 
 function getProductImage(product) {
-
     if (
+        !product ||
         !product.image ||
+        typeof product.image !== 'string' ||
         product.image.trim() === ""
     ) {
         return "./assets/images/no-image.png";
     }
 
-    // Nếu database đã lưu URL đầy đủ
+    // Nếu database lưu Data URL (Base64 / WebP)
+    if (product.image.startsWith("data:image/")) {
+        return product.image;
+    }
+
+    // Nếu database đã lưu URL đầy đủ (http/https)
     if (
         product.image.startsWith("http://") ||
         product.image.startsWith("https://")

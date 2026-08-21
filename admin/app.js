@@ -1,5 +1,5 @@
 import { TOKEN_KEY, USER_KEY, API_BASE_URL, RESERVATION_STATUS_MAP } from './js/config.js';
-import { formatCurrency, formatDateTime, formatNumber, escapeHtml, userInitials, statusChip, tableStatusClass, orderStatusClass, paymentStatusClass, reservationStatusClass } from './js/utils.js';
+import { formatCurrency, formatDateTime, formatNumber, escapeHtml, userInitials, statusChip, tableStatusClass, orderStatusClass, paymentStatusClass, reservationStatusClass, resolveImageUrl, compressImageToWebP } from './js/utils.js';
 import { api } from './js/api.js';
 import { renderReservationsGrid } from './js/views/reservationsView.js';
 import { renderOrdersGrid, generatePayOSQRUrl, getOrderTableInfo } from './js/views/ordersView.js';
@@ -1616,7 +1616,7 @@ function renderCategoriesGrid(records) {
       ${records.map(cat => `
         <article class="category-card">
           <div class="category-card-media">
-            ${cat.image ? `<img src="${escapeHtml(cat.image)}" alt="${escapeHtml(cat.name)}" />` : `<div class="product-card-placeholder" style="height:100%"><i class="fa-solid fa-folder-open"></i></div>`}
+            ${cat.image ? `<img src="${escapeHtml(resolveImageUrl(cat.image))}" alt="${escapeHtml(cat.name)}" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'product-card-placeholder\\' style=\\'height:100%\\'><i class=\\'fa-solid fa-folder-open\\'></i></div>'" />` : `<div class="product-card-placeholder" style="height:100%"><i class="fa-solid fa-folder-open"></i></div>`}
             <span class="category-card-badge">${formatNumber(cat.productCount ?? 0)} Món</span>
           </div>
           <div class="category-card-body">
@@ -2213,13 +2213,14 @@ function renderField(view, field, value, record) {
   }
 
   if (field.type === 'image') {
+    const resolvedVal = resolveImageUrl(value);
     return `
       <div class="field full">
         <label for="${field.name}">${escapeHtml(field.label)}</label>
-        <input id="${field.name}" name="${field.name}" type="text" value="${escapeHtml(value || '')}" placeholder="/uploads/... hoặc URL ảnh" />
-        <input name="${field.name}File" type="file" accept="image/*" />
-        <div class="form-hint">Chọn file để upload tự động hoặc dán trực tiếp URL ảnh.</div>
-        ${value ? `<div class="image-preview"><img src="${escapeHtml(value)}" alt="${escapeHtml(field.label)}" /></div>` : ''}
+        <input id="${field.name}" name="${field.name}" type="text" value="${escapeHtml(value || '')}" placeholder="/uploads/... hoặc URL ảnh hoặc chọn file bên dưới" />
+        <input name="${field.name}File" type="file" accept="image/*" onchange="const f=this.files[0]; if(f){ const r=new FileReader(); r.onload=e=>{ const p=this.parentElement.querySelector('.image-preview img') || this.parentElement.querySelector('.image-preview'); if(p){ if(p.tagName==='IMG') p.src=e.target.result; else p.innerHTML='<img src=\\''+e.target.result+'\\' style=\\'max-height:120px; border-radius:8px; margin-top:0.5rem\\' />'; } else { const d=document.createElement('div'); d.className='image-preview'; d.innerHTML='<img src=\\''+e.target.result+'\\' style=\\'max-height:120px; border-radius:8px; margin-top:0.5rem\\' />'; this.parentElement.appendChild(d); } }; r.readAsDataURL(f); }" />
+        <div class="form-hint">Chọn file ảnh (tự động nén WebP siêu nhẹ, không lo mất ảnh trên Vercel) hoặc dán link ảnh.</div>
+        ${resolvedVal ? `<div class="image-preview" style="margin-top:0.5rem"><img src="${escapeHtml(resolvedVal)}" alt="${escapeHtml(field.label)}" style="max-height:120px; border-radius:8px; object-fit:cover" /></div>` : ''}
       </div>
     `;
   }
@@ -2873,7 +2874,14 @@ async function hydrateImageFields(form, fields, payload) {
   for (const field of fields.filter(item => item.type === 'image')) {
     const file = formData.get(`${field.name}File`);
     if (file instanceof File && file.size > 0) {
-      nextPayload[field.name] = await uploadImage(file);
+      try {
+        // Tự động nén ảnh sang WebP độ phân giải tối ưu (dưới 30KB) để lưu trữ vĩnh viễn trên Supabase
+        const webpDataUrl = await compressImageToWebP(file, 800, 800, 0.82);
+        nextPayload[field.name] = webpDataUrl;
+      } catch (compressErr) {
+        console.warn('Lỗi nén ảnh WebP, fallback upload API:', compressErr);
+        nextPayload[field.name] = await uploadImage(file);
+      }
     }
   }
   return nextPayload;
