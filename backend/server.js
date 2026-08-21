@@ -29,12 +29,16 @@ sequelize.sync().then(async () => {
         console.error('Seeder execution note:', seedErr.message);
     }
 
-    // Khởi động dọn dẹp đặt bàn quá hạn
-    startCleanupTask();
+    if (!process.env.VERCEL) {
+        // Khởi động dọn dẹp đặt bàn quá hạn (chỉ chạy ở local / persistent server)
+        startCleanupTask();
 
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
-    });
+        app.listen(PORT, () => {
+            console.log(`Server is running on port ${PORT}`);
+        });
+    }
 }).catch(err => {
     console.error('Failed to sync database:', err);
 });
+
+module.exports = app;
