@@ -227,10 +227,12 @@
         <div class="hero-btn">
 
 
-            <!-- KHÔNG ĐI THẲNG MENU -->
+            <!-- QUÉT QR ĐẶT MÓN -->
 
             <a
-                href="#qr-section"
+                href="javascript:void(0)"
+                id="openQrBtn"
+                onclick="if(typeof openQrScanner==='function'){openQrScanner();}else{window.location.href='index.html#open-qr';}"
                 class="btn btn-primary">
 
                 <i class="fa-solid fa-qrcode"></i>
@@ -662,7 +664,7 @@
 
 
                 <li>
-                    <a href="#qr-section">
+                    <a href="javascript:void(0)" onclick="if(typeof openQrScanner==='function'){openQrScanner();}else{window.location.href='index.html#open-qr';}">
                         Quét QR để xem thực đơn
                     </a>
                 </li>

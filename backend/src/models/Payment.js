@@ -12,8 +12,9 @@ module.exports = (sequelize) => {
             allowNull: false,
         },
         paymentMethod: {
-            type: DataTypes.ENUM("CASH", "VNPAY", "MOMO", "BANKING"),
+            type: DataTypes.STRING(50),
             allowNull: false,
+            defaultValue: "CASH",
         },
         transactionCode: {
             type: DataTypes.STRING(255),

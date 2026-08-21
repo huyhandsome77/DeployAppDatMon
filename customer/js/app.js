@@ -1,8 +1,4 @@
-const API_BASE = (
-    window.APP_API_BASE_URL ||
-    localStorage.getItem('appdatmon_api_base') ||
-    window.location.origin
-).replace(/\/$/, '');
+const API_BASE = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin.startsWith('http')) ? window.location.origin : "http://localhost:3000";
 const TOKEN_KEY = 'appdatmon_customer_token';
 const USER_KEY = 'appdatmon_customer_user';
 const app = document.getElementById('app');
@@ -480,13 +476,42 @@ if (
 
 
 /*==================================================
-                QR BUTTON EVENTS
+                QR & MOBILE MENU EVENTS
 ==================================================*/
 
 document.addEventListener("click", function (e) {
-    /* HEADER - QUÉT QR */
-    const qrNavLink = e.target.closest("#qrNavLink");
-    if (qrNavLink) {
+    /* MOBILE MENU TOGGLE */
+    const mobileMenuBtn = e.target.closest("#mobileMenuBtn");
+    if (mobileMenuBtn) {
+        e.preventDefault();
+        const headerNav = document.querySelector(".header nav");
+        if (headerNav) {
+            headerNav.classList.toggle("active");
+            const icon = mobileMenuBtn.querySelector("i");
+            if (icon) {
+                if (headerNav.classList.contains("active")) {
+                    icon.className = "fa-solid fa-xmark";
+                } else {
+                    icon.className = "fa-solid fa-bars";
+                }
+            }
+        }
+        return;
+    }
+
+    /* ĐÓNG MOBILE MENU KHI CLICK VÀO LINK */
+    if (e.target.closest(".header nav a")) {
+        const headerNav = document.querySelector(".header nav");
+        if (headerNav && headerNav.classList.contains("active")) {
+            headerNav.classList.remove("active");
+            const icon = document.querySelector("#mobileMenuBtn i");
+            if (icon) icon.className = "fa-solid fa-bars";
+        }
+    }
+
+    /* MỞ MODAL QUÉT QR (Header, Hero, Footer, hoặc bất kỳ nút QR nào) */
+    const qrTrigger = e.target.closest("#qrNavLink, #openQrBtn, a[href='#qr-section'], a[href='#open-qr'], a[href*='qr-section'], .btn-open-qr");
+    if (qrTrigger) {
         e.preventDefault();
         if (typeof window.openQrScanner === 'function') {
             window.openQrScanner();
@@ -496,33 +521,14 @@ document.addEventListener("click", function (e) {
         return;
     }
 
-    /* INDEX - QUÉT QR */
-    const openQrBtn = e.target.closest("#openQrBtn");
-    if (openQrBtn) {
-        e.preventDefault();
-        if (typeof window.openQrScanner === 'function') {
-            window.openQrScanner();
-        } else {
-            window.location.href = "index.html#open-qr";
-        }
-        return;
-    }
-
-    /* ĐÓNG MODAL */
-    const closeBtn = e.target.closest("#closeQrModal");
+    /* ĐÓNG MODAL QR */
+    const closeBtn = e.target.closest("#closeQrModal, .qr-modal-overlay");
     if (closeBtn) {
         e.preventDefault();
         if (typeof window.closeQrScanner === 'function') {
             window.closeQrScanner();
         }
         return;
-    }
-
-    /* CLICK NỀN MODAL */
-    if (e.target.classList.contains("qr-modal-overlay")) {
-        if (typeof window.closeQrScanner === 'function') {
-            window.closeQrScanner();
-        }
     }
 });
 

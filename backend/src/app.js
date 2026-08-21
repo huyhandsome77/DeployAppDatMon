@@ -9,23 +9,10 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 
-const fs = require('fs');
-
-const resolveDir = (dirName) => {
-    const candidates = [
-        path.join(__dirname, '..', dirName),
-        path.join(__dirname, '..', '..', dirName)
-    ];
-    for (const c of candidates) {
-        if (fs.existsSync(c)) return c;
-    }
-    return candidates[0];
-};
-
-const customerDir = resolveDir('customer');
-const adminDir = resolveDir('admin');
-const uploadsDir = resolveDir('uploads');
-const docsDir = resolveDir('docs');
+const customerDir = path.join(__dirname, '..', '..', 'customer');
+const adminDir = path.join(__dirname, '..', '..', 'admin');
+const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
+const docsDir = path.join(__dirname, '..', '..', 'docs');
 
 // Static Folder for Uploads
 app.use('/uploads', express.static(uploadsDir));
@@ -38,17 +25,10 @@ app.get('/docs', (req, res) => {
 });
 
 // Swagger UI & Specification
-const swaggerUiOptions = {
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     explorer: true,
-    customSiteTitle: 'AppDatMon API Docs',
-    customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
-    customJs: [
-        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.min.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.min.js'
-    ]
-};
-
-app.use('/api-docs', swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+    customSiteTitle: 'AppDatMon API Docs'
+}));
 
 app.get('/api-docs.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
@@ -81,6 +61,18 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const pointRoutes = require('./routes/pointRoutes');
 const statRoutes = require('./routes/statRoutes');
 const payosRoutes = require('./routes/payosRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+
+app.get('/api/health', (req, res) => {
+    const { sequelize } = require('./configs/db');
+    const dialect = sequelize ? sequelize.getDialect() : 'unknown';
+    res.json({
+        status: 'ok',
+        database: dialect === 'postgres' ? 'Supabase (PostgreSQL)' : 'MySQL',
+        dialect: dialect,
+        databaseUrlConfigured: !!process.env.DATABASE_URL
+    });
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -94,6 +86,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/points', pointRoutes);
 app.use('/api/stats', statRoutes);
 app.use('/api/payos', payosRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Customer Static files
 app.use(express.static(customerDir, { etag: false, maxAge: 0, setHeaders: (res) => { res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); } }));

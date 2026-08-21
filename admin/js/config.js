@@ -1,5 +1,4 @@
-// System Configuration & Constants
-export const API_BASE_URL = (window.ADMIN_API_BASE_URL || localStorage.getItem('appdatmon_admin_api_base') || window.location.origin).replace(/\/$/, '');
+export const API_BASE_URL = (window.ADMIN_API_BASE_URL || localStorage.getItem('appdatmon_admin_api_base') || (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin.startsWith('http') ? window.location.origin : 'http://localhost:3000')).replace(/\/$/, '');
 export const TOKEN_KEY = 'appdatmon_admin_token';
 export const USER_KEY = 'appdatmon_admin_user';
 

@@ -31,7 +31,7 @@ module.exports = (sequelize) => {
             defaultValue: "UNPAID",
         },
         paymentMethod: {
-            type: DataTypes.ENUM("CASH", "TRANSFER"),
+            type: DataTypes.STRING(50),
             allowNull: true,
         },
         isPointsAdded: {

@@ -6,14 +6,25 @@ const fs = require('fs');
 const { verifyToken, isAdmin } = require('../middlewares/authMiddleware');
 
 // Đảm bảo thư mục uploads tồn tại
-const uploadDir = 'uploads/';
+const uploadDir = process.env.VERCEL ? '/tmp/uploads' : path.join(__dirname, '..', '..', 'uploads');
 if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+    try {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    } catch (e) {
+        console.warn('Could not create upload directory:', e.message);
+    }
 }
 
 // Cấu hình lưu trữ
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
+        if (!fs.existsSync(uploadDir)) {
+            try {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            } catch (e) {
+                // fallback
+            }
+        }
         cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
@@ -30,7 +41,7 @@ router.post('/image', verifyToken, isAdmin, upload.single('image'), (req, res) =
         return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Trả về URL của ảnh (đường dẫn tuyệt đối hoặc tương đối tùy cấu hình client)
+    // Trả về URL của ảnh
     const imageUrl = `/uploads/${req.file.filename}`;
     res.json({ imageUrl: imageUrl });
 });

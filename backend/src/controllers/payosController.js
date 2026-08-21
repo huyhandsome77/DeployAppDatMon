@@ -1,5 +1,5 @@
 const PayOSLib = require("@payos/node");
-const { Order, RestaurantTable, sequelize } = require("../models");
+const { Order, RestaurantTable, Payment, sequelize } = require("../models");
 const { Op } = require('sequelize');
 
 const PayOS = PayOSLib.default || (typeof PayOSLib === 'function' ? PayOSLib : PayOSLib.PayOS);
@@ -83,48 +83,104 @@ exports.checkOrderStatus = async (req, res) => {
     try {
         const { orderId } = req.params;
         const order = await Order.findByPk(orderId);
-        if (!order) return res.status(404).json({ message: "Order not found" });
+        if (!order) return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
 
-        // Nếu đã thanh toán trong DB rồi thì trả về luôn
-        if (order.paymentStatus === 'PAID') {
-            return res.json({ status: 'PAID', message: 'Already paid' });
+        // Check if PayOS library/keys are available
+        if (!payos || !process.env.PAYOS_CLIENT_ID || !process.env.PAYOS_API_KEY) {
+            return res.status(400).json({ 
+                status: order.paymentStatus, 
+                message: "Chưa cấu hình API Keys PayOS trong file .env (PAYOS_CLIENT_ID, PAYOS_API_KEY)" 
+            });
         }
 
-        // Tìm orderCode từ note
-        const match = order.note?.match(/\[PAYOS:(\d+)\]/);
-        if (!match) return res.json({ status: order.paymentStatus, message: 'No PayOS code found' });
-
-        const orderCode = Number(match[1]);
-
-        // Hỏi trực tiếp PayOS
-        let paymentInfo;
-        if (payos.paymentRequests && typeof payos.paymentRequests.getPaymentLinkInformation === 'function') {
-            paymentInfo = await payos.paymentRequests.getPaymentLinkInformation(orderCode);
+        // Tìm orderCode từ order.note hoặc Payment.transactionCode
+        let orderCode = null;
+        const matchNote = order.note?.match(/\[PAYOS:(\d+)\]/);
+        if (matchNote) {
+            orderCode = Number(matchNote[1]);
         } else {
-            paymentInfo = await payos.getPaymentLinkInformation(orderCode);
+            const payment = await Payment.findOne({ where: { order_id: order.id } });
+            const matchTxn = payment?.transactionCode?.match(/PAYOS-(\d+)/);
+            if (matchTxn) {
+                orderCode = Number(matchTxn[1]);
+            }
         }
 
-        console.log(`[PayOS Check] Trạng thái đơn ${orderId} trên PayOS: ${paymentInfo.status}`);
+        if (!orderCode) {
+            return res.json({ 
+                status: order.paymentStatus, 
+                message: `Đơn hàng #${orderId} không có mã đối soát PayOS (Thanh toán tiền mặt hoặc chưa tạo liên kết PayOS).` 
+            });
+        }
+
+        // Gọi API đối soát sang PayOS
+        let paymentInfo;
+        try {
+            if (payos.paymentRequests && typeof payos.paymentRequests.getPaymentLinkInformation === 'function') {
+                paymentInfo = await payos.paymentRequests.getPaymentLinkInformation(orderCode);
+            } else {
+                paymentInfo = await payos.getPaymentLinkInformation(orderCode);
+            }
+        } catch (payosErr) {
+            console.error("[PayOS API Error]:", payosErr.message);
+            return res.status(400).json({ 
+                status: order.paymentStatus, 
+                message: `Không thể kiểm tra trên PayOS (Mã #${orderCode}): ${payosErr.message || 'Mã thanh toán không tồn tại trên hệ thống PayOS'}` 
+            });
+        }
+
+        console.log(`[PayOS Check] Trạng thái đơn #${orderId} trên PayOS:`, paymentInfo.status);
 
         // Nếu PayOS báo đã trả, cập nhật ngay vào DB
         if (paymentInfo.status === 'PAID') {
             await order.update({
                 paymentStatus: 'PAID',
                 status: 'COMPLETED',
-                paymentMethod: 'TRANSFER'
+                paymentMethod: 'PAYOS'
             });
+
+            const txnCode = `PAYOS-${orderCode}`;
+            const [pRecord, created] = await Payment.findOrCreate({
+                where: { order_id: order.id },
+                defaults: {
+                    order_id: order.id,
+                    amount: order.finalPrice,
+                    paymentMethod: 'PAYOS',
+                    transactionCode: txnCode,
+                    status: 'SUCCESS',
+                    paidAt: new Date()
+                }
+            });
+            if (!created) {
+                await pRecord.update({
+                    amount: order.finalPrice,
+                    paymentMethod: 'PAYOS',
+                    transactionCode: txnCode,
+                    status: 'SUCCESS',
+                    paidAt: new Date()
+                });
+            }
 
             if (order.table_id) {
                 await RestaurantTable.update({ status: 'AVAILABLE' }, { where: { id: order.table_id } });
             }
-            return res.json({ status: 'PAID', message: 'Updated from PayOS' });
+            return res.json({ 
+                status: 'PAID', 
+                message: `PayOS xác nhận ĐÃ THANH TOÁN (Số tiền: ${paymentInfo.amountPaid || order.finalPrice}đ)`, 
+                paymentInfo 
+            });
         }
 
-        res.json({ status: order.paymentStatus, payosStatus: paymentInfo.status });
+        return res.json({ 
+            status: order.paymentStatus, 
+            payosStatus: paymentInfo.status, 
+            message: `Trạng thái trên PayOS: ${paymentInfo.status}`, 
+            paymentInfo 
+        });
 
     } catch (error) {
         console.error("Check Status Error:", error.message);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: "Lỗi đối soát PayOS", error: error.message });
     }
 };
 
@@ -144,8 +200,30 @@ exports.payosWebhook = async (req, res) => {
                 await order.update({
                     paymentStatus: 'PAID',
                     status: 'COMPLETED',
-                    paymentMethod: 'TRANSFER'
+                    paymentMethod: 'PAYOS'
                 });
+
+                const txnCode = `PAYOS-${orderCode}`;
+                const [pRecord, created] = await Payment.findOrCreate({
+                    where: { order_id: order.id },
+                    defaults: {
+                        order_id: order.id,
+                        amount: order.finalPrice,
+                        paymentMethod: 'PAYOS',
+                        transactionCode: txnCode,
+                        status: 'SUCCESS',
+                        paidAt: new Date()
+                    }
+                });
+                if (!created) {
+                    await pRecord.update({
+                        amount: order.finalPrice,
+                        paymentMethod: 'PAYOS',
+                        transactionCode: txnCode,
+                        status: 'SUCCESS',
+                        paidAt: new Date()
+                    });
+                }
 
                 if (order.table_id) {
                     await RestaurantTable.update({ status: 'AVAILABLE' }, { where: { id: order.table_id } });

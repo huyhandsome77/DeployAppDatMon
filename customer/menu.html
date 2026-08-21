@@ -69,6 +69,12 @@
 
         </p>
 
+        <!-- Current Table Display Banner (Customer Dark Theme Matched) -->
+        <div id="tableInfoBanner" style="display: inline-flex; align-items: center; gap: 0.65rem; background: linear-gradient(135deg, rgba(214,40,40,0.18) 0%, rgba(24,24,27,0.95) 100%); border: 1px solid rgba(214,40,40,0.45); color: #ffffff; padding: 0.6rem 1.4rem; border-radius: 99px; font-weight: 600; font-size: 0.92rem; margin-top: 0.85rem; box-shadow: 0 8px 24px rgba(214,40,40,0.15); backdrop-filter: blur(10px);">
+            <i class="fa-solid fa-chair" style="font-size: 1.1rem; color: #ff595e;"></i>
+            <span style="color: #b5b5b5;">Vị trí: <strong id="tableNumberDisplay" style="font-size: 1.05rem; color: #ffffff; font-weight: 800;">Đang xác thực bàn...</strong></span>
+        </div>
+
     </div>
 
 
@@ -117,16 +123,43 @@
 
     </div>
 
-    <div class="cart-total">
+    <!-- Points Redemption Section (Customer Template Aligned) -->
+    <div id="pointsRedeemBox" class="points-redeem-box" style="display: none; background: #222225; border: 1px solid #34343a; border-radius: 18px; padding: 18px; margin: 18px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <strong style="color: #ffffff; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-coins" style="color: #f4b400; font-size: 16px;"></i> Điểm tích lũy:
+            </strong>
+            <span id="userPointsBalance" style="color: #f4b400; font-weight: 800; font-size: 15px;">0 pt</span>
+        </div>
 
-        Tổng:
+        <div style="font-size: 12px; color: #b5b5b5; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span>Tỷ lệ quy đổi: 1 pt = 1đ</span>
+            <button type="button" id="maxPointsBtn" style="background: none; border: none; color: #ff595e; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0;">
+                Dùng tối đa
+            </button>
+        </div>
 
-        <span id="totalPrice">
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="number" id="pointsInput" min="0" value="0" placeholder="Nhập số điểm..." style="flex: 1; padding: 12px 14px; border-radius: 12px; border: 1px solid #34343a; font-weight: 600; font-size: 14px; color: #ffffff; background: #18181b; outline: none; transition: border-color 0.2s;" />
+            <button type="button" id="applyPointsBtn" class="btn btn-primary" style="padding: 12px 18px; font-size: 14px; font-weight: 600; background: var(--accent, #d62828); color: #ffffff; border: none; border-radius: 12px; cursor: pointer; white-space: nowrap; transition: all 0.25s; box-shadow: 0 8px 20px rgba(214,40,40,0.25);">
+                Áp dụng
+            </button>
+        </div>
+    </div>
 
-            0đ
-
-        </span>
-
+    <div class="cart-total" style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.9rem; padding: 0.75rem 0;">
+        <div style="display: flex; justify-content: space-between; color: #b5b5b5;">
+            <span>Tạm tính:</span>
+            <strong id="subtotalPrice" style="color: #ffffff;">0đ</strong>
+        </div>
+        <div id="pointsDiscountRow" style="display: none; justify-content: space-between; color: #f4b400; font-weight: 700;">
+            <span><i class="fa-solid fa-coins" style="color: #f4b400;"></i> Trừ điểm thưởng:</span>
+            <strong id="pointsDiscountAmount" style="color: #f4b400;">-0đ</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 1.15rem; font-weight: 900; color: #ffffff; border-top: 1px dashed #34343a; padding-top: 0.6rem; margin-top: 0.3rem;">
+            <span>Tổng thanh toán:</span>
+            <span id="totalPrice" style="color: #ff595e;">0đ</span>
+        </div>
     </div>
 
     <button
@@ -141,6 +174,17 @@
 
 </aside>
 
+</div>
+
+<!-- FLOATING MOBILE CART BAR -->
+<div id="mobileCartBar" class="mobile-cart-bar" style="display: none;">
+    <div class="mobile-cart-info">
+        <span class="mobile-cart-count" id="mobileCartCount">🛒 0 món trong giỏ</span>
+        <span class="mobile-cart-total" id="mobileCartTotal">0đ</span>
+    </div>
+    <button type="button" class="mobile-cart-btn" onclick="document.querySelector('.cart-panel').scrollIntoView({behavior: 'smooth'})">
+        <i class="fa-solid fa-cart-shopping"></i> Xem giỏ hàng
+    </button>
 </div>
 
 </main>

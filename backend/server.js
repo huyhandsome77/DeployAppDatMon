@@ -12,46 +12,29 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
-let isInitialized = false;
+// Connect to Database and sync models
+connectDB();
 
-const initializeDatabase = async () => {
-    if (isInitialized) return;
-    await connectDB();
-
-    // Sync & Seed only when running locally or explicitly enabled via DB_SEED=true
-    if (require.main === module || process.env.DB_SEED === 'true') {
-        console.log('Database syncing and seeding...');
-        await sequelize.sync();
-        await seedProducts();
+// Đồng bộ database
+sequelize.sync().then(async () => {
+    console.log('Database synced successfully.');
+    try {
         await seedTables();
+        await seedProducts();
         await seedAdmin();
         await seedReviews();
         await seedOrders();
         await seedReservations();
-        startCleanupTask();
+    } catch (seedErr) {
+        console.error('Seeder execution note:', seedErr.message);
     }
-    isInitialized = true;
-};
 
-if (require.main === module) {
-    initializeDatabase().then(() => {
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-        });
-    }).catch(err => {
-        console.error('Local server initialization error:', err);
-        process.exit(1);
+    // Khởi động dọn dẹp đặt bàn quá hạn
+    startCleanupTask();
+
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
     });
-}
-
-module.exports = require.main === module
-    ? app
-    : async (req, res, next) => {
-        try {
-            await initializeDatabase();
-            app(req, res, next);
-        } catch (err) {
-            console.error('Vercel initialization error:', err);
-            next(err);
-        }
-    };
+}).catch(err => {
+    console.error('Failed to sync database:', err);
+});

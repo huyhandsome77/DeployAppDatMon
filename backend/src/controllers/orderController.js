@@ -1,4 +1,4 @@
-const { Order, OrderItem, Product, RestaurantTable, User, Reservation, sequelize } = require('../models');
+const { Order, OrderItem, Product, RestaurantTable, User, Reservation, Payment, sequelize } = require('../models');
 
 exports.createOrder = async (req, res, next) => {
     const t = await sequelize.transaction();
@@ -16,15 +16,28 @@ exports.createOrder = async (req, res, next) => {
         let totalPrice = 0;
         const orderItemsData = [];
 
+        // 1. Kiểm tra tồn kho và trạng thái phục vụ từng món
         for (const item of items) {
-            const product = await Product.findByPk(item.product_id);
+            const product = await Product.findByPk(item.product_id, { transaction: t });
             if (!product) {
                 throw new Error(`Sản phẩm với ID ${item.product_id} không tồn tại`);
             }
+
+            if (product.isAvailable === false) {
+                throw new Error(`Món "${product.name}" hiện đang tạm ngưng phục vụ!`);
+            }
+
+            if (product.stock !== undefined && product.stock !== null) {
+                if (product.stock < item.quantity) {
+                    throw new Error(`Món "${product.name}" chỉ còn ${product.stock} suất trong kho, không đủ phục vụ (${item.quantity} suất)!`);
+                }
+            }
+
             const itemTotal = product.price * item.quantity;
             totalPrice += itemTotal;
 
             orderItemsData.push({
+                product,
                 product_id: item.product_id,
                 quantity: item.quantity,
                 unitPrice: product.price,
@@ -33,12 +46,26 @@ exports.createOrder = async (req, res, next) => {
             });
         }
 
+        // 2. Trừ số lượng tồn kho của món ăn & cập nhật trạng thái nếu hết hàng
+        for (const orderItem of orderItemsData) {
+            const product = orderItem.product;
+            if (product.stock !== undefined && product.stock !== null) {
+                const newStock = Math.max(0, product.stock - orderItem.quantity);
+                const updateFields = { stock: newStock };
+                if (newStock === 0) {
+                    updateFields.isAvailable = false; // Tự động ngưng phục vụ nếu hết hàng trong kho
+                }
+                await product.update(updateFields, { transaction: t });
+                console.log(`>>> Deducted ${orderItem.quantity} from product #${product.id} (${product.name}). New stock: ${newStock}`);
+            }
+        }
+
         // Xử lý điểm thưởng (1 điểm = 1đ)
         let discountAmount = 0;
         const pointsToUse = parseInt(used_points) || 0;
 
         if (user_id && pointsToUse > 0) {
-            const user = await User.findByPk(user_id);
+            const user = await User.findByPk(user_id, { transaction: t });
             console.log(">>> Found User for points:", user ? { id: user.id, points: user.points } : "Not Found");
 
             if (user && user.points >= pointsToUse) {
@@ -67,7 +94,11 @@ exports.createOrder = async (req, res, next) => {
         }, { transaction: t });
 
         const itemsWithOrderId = orderItemsData.map(item => ({
-            ...item,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.totalPrice,
+            note: item.note,
             order_id: order.id
         }));
         await OrderItem.bulkCreate(itemsWithOrderId, { transaction: t });
@@ -93,7 +124,7 @@ exports.createOrder = async (req, res, next) => {
         });
 
     } catch (error) {
-        await t.rollback();
+        if (t) await t.rollback();
         console.error("Create Order Error:", error);
         res.status(400).json({ message: error.message });
     }
@@ -152,34 +183,83 @@ exports.getOrderById = async (req, res, next) => {
 };
 
 exports.updateOrderStatus = async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
         const { id } = req.params;
         const { status } = req.body;
 
-        const order = await Order.findByPk(id);
+        const order = await Order.findByPk(id, {
+            include: [{ model: OrderItem, as: 'OrderItems' }],
+            transaction: t
+        });
+
         if (!order) {
+            await t.rollback();
             return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
         }
 
-        await order.update({ status });
+        const oldStatus = String(order.status).toUpperCase();
+        const newStatus = String(status).toUpperCase();
+
+        // Nếu chuyển sang CANCELLED và trước đó chưa CANCELLED -> Hoàn lại số lượng tồn kho
+        if (newStatus === 'CANCELLED' && oldStatus !== 'CANCELLED') {
+            for (const item of order.OrderItems || []) {
+                const product = await Product.findByPk(item.product_id, { transaction: t });
+                if (product) {
+                    const restoredStock = (product.stock || 0) + item.quantity;
+                    await product.update({
+                        stock: restoredStock,
+                        isAvailable: true // Mở lại món ăn nếu hoàn lại kho
+                    }, { transaction: t });
+                    console.log(`>>> Restored ${item.quantity} to product #${product.id} (${product.name}). New stock: ${restoredStock}`);
+                }
+            }
+        }
+
+        await order.update({ status: newStatus }, { transaction: t });
+        await t.commit();
+
         res.json({ message: "Cập nhật trạng thái thành công", data: order });
     } catch (error) {
+        if (t) await t.rollback();
         console.error("Update Order Status Error:", error);
         next(error);
     }
 };
 
 exports.deleteOrder = async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
         const { id } = req.params;
-        const order = await Order.findByPk(id);
+        const order = await Order.findByPk(id, {
+            include: [{ model: OrderItem, as: 'OrderItems' }],
+            transaction: t
+        });
+
         if (!order) {
+            await t.rollback();
             return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
         }
 
-        await order.destroy();
+        // Hoàn trả tồn kho nếu đơn hủy/xóa chưa bị CANCELLED trước đó
+        if (String(order.status).toUpperCase() !== 'CANCELLED') {
+            for (const item of order.OrderItems || []) {
+                const product = await Product.findByPk(item.product_id, { transaction: t });
+                if (product) {
+                    const restoredStock = (product.stock || 0) + item.quantity;
+                    await product.update({
+                        stock: restoredStock,
+                        isAvailable: true
+                    }, { transaction: t });
+                }
+            }
+        }
+
+        await order.destroy({ transaction: t });
+        await t.commit();
         res.json({ message: "Xóa đơn hàng thành công" });
     } catch (error) {
+        if (t) await t.rollback();
         console.error("Delete Order Error:", error);
         next(error);
     }
@@ -252,6 +332,31 @@ exports.payAllOrdersByTable = async (req, res, next) => {
             transaction: t
         });
 
+        // Lưu thông tin thanh toán vào bảng payments
+        for (const o of orders) {
+            const txnCode = `PAY-TBL${tableId}-${o.id}-${Date.now()}`;
+            const [pRecord, created] = await Payment.findOrCreate({
+                where: { order_id: o.id },
+                defaults: {
+                    order_id: o.id,
+                    amount: o.finalPrice,
+                    paymentMethod: paymentMethod || 'CASH',
+                    transactionCode: txnCode,
+                    status: 'SUCCESS',
+                    paidAt: new Date()
+                },
+                transaction: t
+            });
+            if (!created) {
+                await pRecord.update({
+                    amount: o.finalPrice,
+                    paymentMethod: paymentMethod || 'CASH',
+                    status: 'SUCCESS',
+                    paidAt: new Date()
+                }, { transaction: t });
+            }
+        }
+
         await RestaurantTable.update(
             { status: 'AVAILABLE' },
             { where: { id: tableId }, transaction: t }
@@ -303,6 +408,29 @@ exports.payOrder = async (req, res, next) => {
             status: 'COMPLETED',
             paymentMethod: paymentMethod || 'CASH'
         }, { transaction: t });
+
+        // Lưu thông tin thanh toán vào bảng payments
+        const txnCode = `PAY-${order.id}-${Date.now()}`;
+        const [pRecord, created] = await Payment.findOrCreate({
+            where: { order_id: order.id },
+            defaults: {
+                order_id: order.id,
+                amount: order.finalPrice,
+                paymentMethod: paymentMethod || 'CASH',
+                transactionCode: txnCode,
+                status: 'SUCCESS',
+                paidAt: new Date()
+            },
+            transaction: t
+        });
+        if (!created) {
+            await pRecord.update({
+                amount: order.finalPrice,
+                paymentMethod: paymentMethod || 'CASH',
+                status: 'SUCCESS',
+                paidAt: new Date()
+            }, { transaction: t });
+        }
 
         if (order.table_id) {
             await RestaurantTable.update(

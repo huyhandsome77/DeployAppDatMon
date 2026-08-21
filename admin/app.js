@@ -6,6 +6,7 @@ import { renderOrdersGrid, generatePayOSQRUrl, getOrderTableInfo } from './js/vi
 import { renderTablesFloorGrid } from './js/views/tablesView.js';
 import { renderProductsGrid } from './js/views/productsView.js';
 import { renderUsersGrid } from './js/views/usersView.js';
+import { renderPaymentsGrid } from './js/views/paymentsView.js';
 
 const VIEW_META = {
   overview: {
@@ -40,6 +41,10 @@ const VIEW_META = {
     title: 'Đánh giá',
     description: 'Duyệt phản hồi khách hàng và xóa đánh giá không phù hợp.'
   },
+  payments: {
+    title: 'Thanh toán & Giao dịch',
+    description: 'Quản lý lịch sử giao dịch thanh toán, mã giao dịch và phương thức thanh toán.'
+  },
   stats: {
     title: 'Reports',
     description: 'Lọc theo ngày, tháng hoặc năm để xem tổng đơn và tổng doanh thu.'
@@ -54,6 +59,7 @@ const NAV_ICONS = {
   tables: 'fa-table',
   reservations: 'fa-calendar-check',
   orders: 'fa-receipt',
+  payments: 'fa-credit-card',
   reviews: 'fa-star',
   stats: 'fa-chart-line'
 };
@@ -229,6 +235,30 @@ const ENTITY_CONFIGS = {
       { label: 'Số sao', render: row => '★'.repeat(row.rating || 0) },
       { label: 'Ngày tạo', render: row => formatDateTime(row.created_at || row.createdAt) }
     ]
+  },
+  payments: {
+    endpoint: '/api/payments',
+    searchKey: 'search',
+    createLabel: 'Làm mới danh sách',
+    allowCreate: false,
+    allowEdit: false,
+    allowDelete: true,
+    columns: [
+      { label: 'Mã GD (Hệ thống)', render: row => row.transactionCode || `#PAY-${row.id}` },
+      { label: 'Mã PayOS', render: row => {
+          const matchNote = row.Order?.note?.match(/\[PAYOS:(\d+)\]/);
+          const matchTxn = row.transactionCode?.match(/PAYOS-(\d+)/);
+          const code = matchNote ? matchNote[1] : (matchTxn ? matchTxn[1] : null);
+          return code ? `<span class="badge-inline" style="background:#e0f2fe; color:#0284c7; font-weight:800"><i class="fa-solid fa-qrcode"></i> ${code}</span>` : '<span class="muted">-</span>';
+        }
+      },
+      { label: 'Mã đơn', render: row => row.Order ? `#${row.Order.id}` : row.order_id ? `#${row.order_id}` : '-' },
+      { label: 'Số tiền', render: row => formatCurrency(row.amount) },
+      { label: 'Phương thức', render: row => statusChip(row.paymentMethod, row.paymentMethod) },
+      { label: 'Trạng thái', render: row => statusChip(row.status === 'SUCCESS' ? 'SUCCESS' : 'FAILED', row.status) },
+      { label: 'Khách hàng', render: row => row.Order?.User?.fullName || 'Khách vãng lai' },
+      { label: 'Thời gian', render: row => formatDateTime(row.paidAt || row.created_at) }
+    ]
   }
 };
 
@@ -247,6 +277,7 @@ const state = {
     tables: [],
     reservations: [],
     orders: [],
+    payments: [],
     reviews: [],
     stats: null
   },
@@ -257,6 +288,7 @@ const state = {
     tables: '',
     reservations: '',
     orders: '',
+    payments: '',
     reviews: ''
   },
   viewModes: {
@@ -265,6 +297,7 @@ const state = {
     tables: 'floor',
     reservations: 'cards',
     orders: 'cards',
+    payments: 'cards',
     users: 'grid',
     reviews: 'cards'
   },
@@ -273,6 +306,7 @@ const state = {
     tables: 'ALL',
     reservations: 'ALL',
     orders: 'ALL',
+    payments: 'ALL',
     users: 'ALL',
     reviews: 'ALL'
   },
@@ -395,6 +429,7 @@ async function loadAllData() {
     tables: api('/api/tables'),
     reservations: api('/api/reservations'),
     orders: api('/api/orders'),
+    payments: api('/api/payments'),
     reviews: api('/api/reviews?page=1&limit=200')
   };
 
@@ -424,6 +459,9 @@ async function loadAllData() {
   }
   if (Array.isArray(state.data.reservations)) {
     window.__reservationsList = state.data.reservations;
+  }
+  if (Array.isArray(state.data.payments)) {
+    window.__paymentsList = state.data.payments;
   }
 }
 
@@ -471,6 +509,7 @@ function render() {
         ['Tổng quan', ['overview']],
         ['Quản lý thực đơn', ['products', 'categories']],
         ['Phục vụ & đặt bàn', ['tables', 'reservations', 'orders']],
+        ['Thanh toán & Giao dịch', ['payments']],
         ['Khách hàng', ['users', 'reviews']],
         ['Báo cáo', ['stats']]
       ]
@@ -478,6 +517,7 @@ function render() {
         ['Tổng quan', ['overview']],
         ['Quản lý thực đơn', ['products', 'categories']],
         ['Phục vụ & đặt bàn', ['tables', 'reservations', 'orders']],
+        ['Thanh toán & Giao dịch', ['payments']],
         ['Khách hàng', ['reviews']]
       ];
 
@@ -661,6 +701,7 @@ function navItem(view) {
     tables: 'Quản lý bàn',
     reservations: 'Đặt bàn trước',
     orders: 'Quản lý đơn hàng',
+    payments: 'Lịch sử thanh toán',
     reviews: 'Đánh giá khách',
     stats: 'Báo cáo doanh thu'
   };
@@ -711,73 +752,148 @@ function renderActiveView() {
 
 function renderOverview() {
   const stats = state.data.stats || {};
-  const recentOrders = Array.isArray(state.data.orders) ? state.data.orders.slice(0, 5) : [];
-  const totalOrdersCount = (state.data.orders || []).filter(o => String(o.status).toUpperCase() !== 'CANCELLED').length;
-  const cancelledOrdersCount = (state.data.orders || []).filter(o => String(o.status).toUpperCase() === 'CANCELLED').length;
+  const orders = state.data.orders || [];
+  const tables = state.data.tables || [];
+  const products = state.data.products || [];
+  const payments = state.data.payments || [];
+  const users = state.data.users || [];
+
+  const recentOrders = orders.slice(0, 5);
+  const totalOrdersCount = orders.filter(o => String(o.status).toUpperCase() !== 'CANCELLED').length;
+  const cancelledOrdersCount = orders.filter(o => String(o.status).toUpperCase() === 'CANCELLED').length;
   const cancellationRate = totalOrdersCount > 0 ? ((cancelledOrdersCount / totalOrdersCount) * 100).toFixed(1) : '0.0';
 
+  // --- Dynamic Alerts Calculation ---
+  // 1. Stock / Product Alerts: products with low stock (<= 5) or disabled (!isAvailable)
+  const lowStockProducts = products.filter(p => (p.stock !== undefined && p.stock !== null && p.stock <= 5) || p.isAvailable === false || String(p.status).toUpperCase() === 'OUT_OF_STOCK');
+  
+  // 2. Table Alerts: tables in CLEANING state or OCCUPIED
+  const cleaningTables = tables.filter(t => (t.calculatedStatus || t.status) === 'CLEANING');
+  const occupiedTables = tables.filter(t => (t.calculatedStatus || t.status) === 'OCCUPIED');
+
+  // 3. Unpaid / Ready Orders Alerts: READY orders that are not PAID
+  const readyUnpaidOrders = orders.filter(o => String(o.status).toUpperCase() === 'READY' && String(o.paymentStatus).toUpperCase() !== 'PAID');
+
+  // Calculate PayOS Total Revenue
+  const payosTotalAmount = payments
+    .filter(p => String(p.status).toUpperCase() === 'SUCCESS' && (String(p.paymentMethod).toUpperCase() === 'PAYOS' || p.transactionCode?.includes('PAYOS')))
+    .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
   return `
-    <!-- Smart Real-Time Alert Widget Strip -->
-    <section class="smart-alerts-strip" style="display:grid; gap:0.75rem; margin-bottom:1.25rem">
-      <div style="background:linear-gradient(90deg, #fff7d6 0%, #ffedd5 100%); border:1px solid #fed7aa; border-radius:16px; padding:0.8rem 1.1rem; display:flex; align-items:center; justify-content:space-between">
-        <div style="display:flex; align-items:center; gap:0.75rem">
-          <span style="background:#f97316; color:white; width:34px; height:34px; border-radius:10px; display:grid; place-items:center; font-size:1rem"><i class="fa-solid fa-triangle-exclamation"></i></span>
-          <div>
-            <strong style="color:#9a3412; font-size:0.92rem">Cảnh báo tồn kho: Món "Bò Bít Tết Sốt Tiêu" sắp hết (còn 2 suất trong bếp)</strong>
-            <div style="font-size:0.8rem; color:#c2410c">Vui lòng cập nhật nguyên liệu hoặc chuyển trạng thái tạm ngưng bán</div>
-          </div>
+    <!-- Hero Banner Greeting -->
+    <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 1.35rem 1.6rem; border-radius: 20px; color: #ffffff; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(15,23,42,0.12); flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem">
+          <span style="background:rgba(59,130,246,0.2); color:#60a5fa; padding:0.2rem 0.6rem; border-radius:8px; font-size:0.75rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px">Dashboard Realtime</span>
+          <span style="font-size:0.8rem; color:#94a3b8;"><i class="fa-regular fa-calendar-check" style="color:#38bdf8"></i> Hôm nay: ${new Date().toLocaleDateString('vi-VN')}</span>
         </div>
-        <button class="btn btn-secondary btn-small" data-action="switch-view" data-view="products"><i class="fa-solid fa-boxes-stacked"></i> Kiểm tra kho</button>
+        <h2 style="font-size: 1.4rem; font-weight: 900; margin: 0; color: #ffffff;">Tổng quan Hoạt động Nhà Hàng</h2>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin: 0.2rem 0 0 0;">Theo dõi tình trạng tồn kho, sơ đồ bàn, đơn hàng POS & giao dịch PayOS realtime.</p>
       </div>
-
-      <div style="background:linear-gradient(90deg, #f0fdf4 0%, #dcfce7 100%); border:1px solid #bbf7d0; border-radius:16px; padding:0.8rem 1.1rem; display:flex; align-items:center; justify-content:space-between">
-        <div style="display:flex; align-items:center; gap:0.75rem">
-          <span style="background:#16a34a; color:white; width:34px; height:34px; border-radius:10px; display:grid; place-items:center; font-size:1rem"><i class="fa-solid fa-clock-rotate-left"></i></span>
-          <div>
-            <strong style="color:#166534; font-size:0.92rem">Cảnh báo bàn: Bàn #4 đang ngưng dọn dẹp > 20 phút</strong>
-            <div style="font-size:0.8rem; color:#15803d">Nhắc nhở nhân viên dọn dẹp để sẵn sàng đón lượt khách mới</div>
-          </div>
-        </div>
-        <button class="btn btn-secondary btn-small" data-action="switch-view" data-view="tables"><i class="fa-solid fa-chair"></i> Sơ đồ bàn</button>
-      </div>
-    </section>
-
-    <!-- Top Action Bar & Date Range Selector -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; background:#ffffff; padding:0.85rem 1.2rem; border-radius:18px; border:1px solid rgba(115,118,134,0.16)">
-      <div style="display:flex; align-items:center; gap:0.6rem">
-        <strong style="font-size:0.95rem; color:#111c2d"><i class="fa-solid fa-filter text-accent"></i> Thời gian báo cáo:</strong>
-        <select class="inline-input" style="width:auto; font-weight:700">
-          <option selected>Hôm nay (2-8-2026)</option>
-          <option>7 ngày gần nhất</option>
-          <option>30 ngày qua</option>
-          <option>Quý 3 / 2026</option>
-          <option>Tùy chọn khoảng ngày (Date Range)...</option>
-        </select>
-      </div>
-      <div style="display:flex; gap:0.5rem">
-        <button class="btn btn-secondary btn-small" onclick="alert('Đang xuất báo cáo Excel tổng quan...')"><i class="fa-solid fa-file-excel text-success"></i> Xuất Excel</button>
-        <button class="btn btn-secondary btn-small" onclick="alert('Đang tạo báo cáo PDF tổng quan...')"><i class="fa-solid fa-file-pdf text-danger"></i> Xuất PDF</button>
+      <div style="display:flex; gap:0.6rem; flex-wrap:wrap">
+        <button class="btn btn-primary" data-action="switch-view" data-view="orders" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); font-weight:800; font-size:0.85rem"><i class="fa-solid fa-plus"></i> Quản lý Đơn POS</button>
+        <button class="btn btn-secondary" data-action="switch-view" data-view="tables" style="background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2); font-weight:700; font-size:0.85rem"><i class="fa-solid fa-chair"></i> Sơ đồ Bàn (${occupiedTables.length}/${tables.length})</button>
       </div>
     </div>
 
-    <!-- Enhanced KPI Summary Cards with Comparison Trends -->
+    <!-- Dynamic Alert Cards Section -->
+    <section class="smart-alerts-strip" style="display:grid; gap:0.85rem; margin-bottom:1.25rem">
+      
+      <!-- Alert 1: Stock Inventory Alert -->
+      ${lowStockProducts.length > 0 ? `
+        <div style="background: linear-gradient(90deg, #fff7ed 0%, #ffedd5 100%); border: 1px solid #fed7aa; border-radius: 16px; padding: 0.9rem 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; box-shadow: 0 4px 12px rgba(249,115,22,0.06); flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.85rem; flex: 1; min-width: 280px;">
+            <span style="background: #f97316; color: white; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 1.1rem; flex-shrink: 0; box-shadow: 0 4px 10px rgba(249,115,22,0.3);"><i class="fa-solid fa-triangle-exclamation"></i></span>
+            <div>
+              <strong style="color: #9a3412; font-size: 0.92rem; display: block;">
+                Cảnh báo tồn kho: Có ${lowStockProducts.length} món sắp hết / tạm ngưng
+              </strong>
+              <div style="font-size: 0.82rem; color: #c2410c; margin-top: 0.15rem;">
+                Món cảnh báo: ${lowStockProducts.slice(0, 3).map(p => `<strong>${escapeHtml(p.name)}</strong> (Tồn: ${p.stock ?? 0})`).join(', ')}${lowStockProducts.length > 3 ? ` và ${lowStockProducts.length - 3} món khác...` : ''}
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-warning btn-small" data-action="switch-view" data-view="products" style="font-weight: 800; font-size: 0.82rem; padding: 0.45rem 0.85rem;">
+            <i class="fa-solid fa-boxes-stacked"></i> Nạp thêm kho (${lowStockProducts.length} món)
+          </button>
+        </div>
+      ` : `
+        <div style="background: linear-gradient(90deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #bbf7d0; border-radius: 16px; padding: 0.75rem 1.2rem; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="background: #16a34a; color: white; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; font-size: 0.95rem;"><i class="fa-solid fa-circle-check"></i></span>
+            <div>
+              <strong style="color: #166534; font-size: 0.88rem;">Kho hàng ổn định: Tất cả thực đơn đều đủ nguyên liệu phục vụ</strong>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-small" data-action="switch-view" data-view="products" style="font-size:0.78rem; font-weight:700">Xem thực đơn (${products.length} món)</button>
+        </div>
+      `}
+
+      <!-- Alert 2: Table Cleaning Alert -->
+      ${cleaningTables.length > 0 ? `
+        <div style="background: linear-gradient(90deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; border-radius: 16px; padding: 0.9rem 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; box-shadow: 0 4px 12px rgba(37,99,235,0.06); flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.85rem; flex: 1; min-width: 280px;">
+            <span style="background: #2563eb; color: white; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 1.1rem; flex-shrink: 0; box-shadow: 0 4px 10px rgba(37,99,235,0.3);"><i class="fa-solid fa-broom"></i></span>
+            <div>
+              <strong style="color: #1e40af; font-size: 0.92rem; display: block;">
+                Cảnh báo bàn ăn: Có ${cleaningTables.length} bàn đang cần dọn dẹp (Bàn ${cleaningTables.map(t => `#${t.tableNumber}`).join(', ')})
+              </strong>
+              <div style="font-size: 0.82rem; color: #1d4ed8; margin-top: 0.15rem;">
+                Vui lòng nhắc nhở nhân viên dọn dẹp sạch sẽ để chuyển bàn sang sẵn sàng đón khách.
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap:0.4rem">
+            <button class="btn btn-primary btn-small" data-action="save-table-status" data-id="${cleaningTables[0].id}" data-status="AVAILABLE" style="font-weight: 800; font-size: 0.82rem; padding: 0.45rem 0.85rem;">
+              <i class="fa-solid fa-check"></i> Đã dọn xong Bàn #${cleaningTables[0].tableNumber}
+            </button>
+            <button class="btn btn-secondary btn-small" data-action="switch-view" data-view="tables" style="font-weight: 700; font-size: 0.82rem; padding: 0.45rem 0.75rem;">
+              <i class="fa-solid fa-chair"></i> Sơ đồ bàn
+            </button>
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Alert 3: Ready Orders Waiting for Payment Alert -->
+      ${readyUnpaidOrders.length > 0 ? `
+        <div style="background: linear-gradient(90deg, #fefce8 0%, #fef9c3 100%); border: 1px solid #fef08a; border-radius: 16px; padding: 0.9rem 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; box-shadow: 0 4px 12px rgba(202,138,4,0.06); flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.85rem; flex: 1; min-width: 280px;">
+            <span style="background: #ca8a04; color: white; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 1.1rem; flex-shrink: 0;"><i class="fa-solid fa-cash-register"></i></span>
+            <div>
+              <strong style="color: #854d0e; font-size: 0.92rem; display: block;">
+                Cảnh báo thu tiền: Đơn hàng #${readyUnpaidOrders[0].id} đã chế biến xong nhưng chưa thu tiền!
+              </strong>
+              <div style="font-size: 0.82rem; color: #a16207; margin-top: 0.15rem;">
+                Tổng tiền: <strong>${formatCurrency(readyUnpaidOrders[0].finalPrice ?? readyUnpaidOrders[0].totalPrice)}</strong> - Vui lòng kiểm tra thanh toán với khách.
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-small" data-action="open-admin-checkout" data-id="${readyUnpaidOrders[0].id}" data-table="${readyUnpaidOrders[0].table_id || ''}" data-customer="${escapeHtml(readyUnpaidOrders[0].User?.fullName || 'Khách')}" data-amount="${readyUnpaidOrders[0].finalPrice ?? readyUnpaidOrders[0].totalPrice}" data-items="${(readyUnpaidOrders[0].OrderItems || []).length}" data-status="${readyUnpaidOrders[0].status}" style="font-weight: 800; font-size: 0.82rem; padding: 0.45rem 0.85rem; background: linear-gradient(135deg, #15803d, #16a34a);">
+            <i class="fa-solid fa-wallet"></i> Thu tiền đơn #${readyUnpaidOrders[0].id}
+          </button>
+        </div>
+      ` : ''}
+
+    </section>
+
+    <!-- KPI Summary Cards -->
     <section class="dashboard-kpis">
       <article class="dashboard-kpi-card">
         <div class="dashboard-kpi-header">
           <span class="dashboard-kpi-icon"><i class="fa-solid fa-money-bill-wave"></i></span>
-          <span class="dashboard-kpi-trend up" title="So với tháng trước">+15.4%</span>
+          <span class="dashboard-kpi-trend up" title="Tốc độ tăng trưởng">+15.4%</span>
         </div>
-        <div class="dashboard-kpi-label">Doanh thu tổng quan</div>
+        <div class="dashboard-kpi-label">Doanh thu tổng hệ thống</div>
         <div class="dashboard-kpi-value">${formatCurrency(stats?.totalRevenue || 0)}</div>
-        <div style="font-size:0.75rem; color:#5f748d; margin-top:0.4rem">▲ +${formatCurrency(12500000)} so với cùng kỳ tháng trước</div>
+        <div style="font-size:0.75rem; color:#5f748d; margin-top:0.4rem">PayOS VietQR: <strong style="color:#0284c7">${formatCurrency(payosTotalAmount)}</strong></div>
       </article>
 
       <article class="dashboard-kpi-card">
         <div class="dashboard-kpi-header">
           <span class="dashboard-kpi-icon"><i class="fa-solid fa-cart-shopping"></i></span>
-          <span class="dashboard-kpi-trend up" title="So với tháng trước">+8.2%</span>
+          <span class="dashboard-kpi-trend up">+8.2%</span>
         </div>
-        <div class="dashboard-kpi-label">Tổng đơn hoàn thành</div>
+        <div class="dashboard-kpi-label">Đơn hàng hoàn thành</div>
         <div class="dashboard-kpi-value">${formatNumber(totalOrdersCount)} đơn</div>
         <div style="font-size:0.75rem; color:#5f748d; margin-top:0.4rem">Tỷ lệ hủy đơn: <strong style="color:#b91c1c">${cancellationRate}%</strong></div>
       </article>
@@ -785,11 +901,13 @@ function renderOverview() {
       <article class="dashboard-kpi-card">
         <div class="dashboard-kpi-header">
           <span class="dashboard-kpi-icon"><i class="fa-solid fa-chair"></i></span>
-          <span class="dashboard-kpi-trend neutral">Live 85%</span>
+          <span class="dashboard-kpi-trend neutral">Live ${tables.length > 0 ? Math.round((occupiedTables.length / tables.length) * 100) : 0}%</span>
         </div>
-        <div class="dashboard-kpi-label">Bàn đang có khách</div>
-        <div class="dashboard-kpi-value">${formatNumber((state.data.tables || []).filter(t => (t.calculatedStatus || t.status) === 'OCCUPIED').length)} / ${formatNumber(state.data.tables?.length || 0)} bàn</div>
-        <div style="font-size:0.75rem; color:#5f748d; margin-top:0.4rem">Công suất phục vụ tối ưu</div>
+        <div class="dashboard-kpi-label">Công suất lấp đầy bàn</div>
+        <div class="dashboard-kpi-value">${formatNumber(occupiedTables.length)} / ${formatNumber(tables.length)} bàn</div>
+        <div style="margin-top:0.4rem; background:#e2e8f0; height:6px; border-radius:10px; overflow:hidden">
+          <div style="background:linear-gradient(90deg, #2563eb, #0284c7); height:100%; width:${tables.length > 0 ? (occupiedTables.length / tables.length) * 100 : 0}%"></div>
+        </div>
       </article>
 
       <article class="dashboard-kpi-card">
@@ -797,15 +915,14 @@ function renderOverview() {
           <span class="dashboard-kpi-icon"><i class="fa-solid fa-people-group"></i></span>
           <span class="dashboard-kpi-trend up">+12%</span>
         </div>
-        <div class="dashboard-kpi-label">Khách hàng thành viên</div>
-        <div class="dashboard-kpi-value">${formatNumber(state.data.users?.length || 0)} người</div>
-        <div style="font-size:0.75rem; color:#5f748d; margin-top:0.4rem">Tỷ lệ khách quay lại (Retention): <strong>68%</strong></div>
+        <div class="dashboard-kpi-label">Khách hàng nhà hàng</div>
+        <div class="dashboard-kpi-value">${formatNumber(users.length)} khách</div>
+        <div style="font-size:0.75rem; color:#5f748d; margin-top:0.4rem">Tỷ lệ khách quay lại: <strong>68%</strong></div>
       </article>
     </section>
 
     <!-- Peak Hours & Revenue Distribution Grid -->
     <section class="dashboard-grid-two">
-      <!-- Revenue Trend Chart -->
       <article class="dashboard-panel chart-panel">
         <div class="dashboard-panel-header">
           <div>
@@ -828,26 +945,24 @@ function renderOverview() {
         </div>
       </article>
 
-      <!-- Peak Hours Heatmap Distribution -->
       <article class="dashboard-panel donut-panel">
         <div class="dashboard-panel-header compact">
           <div>
-            <h3 class="dashboard-panel-title">Món ăn bán chạy theo danh mục</h3>
-            <p class="dashboard-panel-copy">Tỷ lệ đóng góp doanh thu</p>
+            <h3 class="dashboard-panel-title">Tình trạng thực đơn</h3>
+            <p class="dashboard-panel-copy">Phân bố sản phẩm & Tồn kho</p>
           </div>
         </div>
         <div class="dashboard-donut-wrap">
           <div class="dashboard-donut-ring">
             <div class="dashboard-donut-center">
-              <div class="dashboard-donut-number">${formatNumber(state.data.products?.length || 0)}</div>
-              <div class="dashboard-donut-note">Món bán ra</div>
+              <div class="dashboard-donut-number">${formatNumber(products.length)}</div>
+              <div class="dashboard-donut-note">Món thực đơn</div>
             </div>
           </div>
         </div>
         <div class="dashboard-donut-legend">
-          <div class="dashboard-donut-item"><span class="dot primary"></span><span>Món chính</span><strong>540</strong></div>
-          <div class="dashboard-donut-item"><span class="dot secondary"></span><span>Đồ uống</span><strong>300</strong></div>
-          <div class="dashboard-donut-item"><span class="dot amber"></span><span>Tráng miệng</span><strong>360</strong></div>
+          <div class="dashboard-donut-item"><span class="dot primary"></span><span>Đang phục vụ</span><strong>${formatNumber(products.filter(p => p.isAvailable !== false && (p.stock === undefined || p.stock > 5)).length)}</strong></div>
+          <div class="dashboard-donut-item"><span class="dot amber"></span><span>Sắp hết (≤ 5)</span><strong>${formatNumber(lowStockProducts.length)}</strong></div>
         </div>
       </article>
     </section>
@@ -876,15 +991,15 @@ function renderOverview() {
             </thead>
             <tbody>
               ${recentOrders.map(order => {
-                const tInfo = getOrderTableInfo(order, state.data.tables);
+                const tInfo = getOrderTableInfo(order, tables);
                 return `
                 <tr>
-                  <td>#${escapeHtml(order.id)}</td>
-                  <td>${escapeHtml(order.User?.fullName || order.user_id ? (order.User?.fullName || `#${order.user_id}`) : 'Khách vãng lai')}</td>
-                  <td><span class="badge-inline" style="background:#e0f2fe; color:#004ac6; font-weight:700"><i class="fa-solid ${tInfo.isTakeaway ? 'fa-bag-shopping' : 'fa-chair'}"></i> ${tInfo.label}</span></td>
+                  <td><strong style="font-family:monospace">#${escapeHtml(order.id)}</strong></td>
+                  <td>${escapeHtml(order.User?.fullName || (order.user_id ? `Khách #${order.user_id}` : 'Khách vãng lai'))}</td>
+                  <td><span class="badge-inline" style="background:#e0f2fe; color:#004ac6; font-weight:800"><i class="fa-solid ${tInfo.isTakeaway ? 'fa-bag-shopping' : 'fa-chair'}"></i> ${tInfo.label}</span></td>
                   <td>${escapeHtml(formatDateTime(order.createdAt || order.created_at))}</td>
                   <td>${statusChip(orderStatusClass(order.status), order.status)}</td>
-                  <td class="right">${formatCurrency(order.finalPrice ?? order.totalPrice)}</td>
+                  <td class="right"><strong style="color:#15803d">${formatCurrency(order.finalPrice ?? order.totalPrice)}</strong></td>
                 </tr>
               `;
               }).join('')}
@@ -914,7 +1029,6 @@ function renderOverview() {
         </div>
       </article>
     </section>
-
   `;
 }
 
@@ -1307,6 +1421,46 @@ function renderViewKpiSummary(view, rawData) {
     `;
   }
 
+  if (view === 'payments') {
+    const total = list.length;
+    const totalAmount = list.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const cashCount = list.filter(p => String(p.paymentMethod).toUpperCase() === 'CASH').length;
+    const onlineCount = list.filter(p => ['PAYOS', 'TRANSFER', 'BANKING', 'VNPAY', 'MOMO'].includes(String(p.paymentMethod).toUpperCase())).length;
+
+    return `
+      <div class="kpi-summary-strip">
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon blue"><i class="fa-solid fa-credit-card"></i></div>
+          <div class="kpi-mini-copy">
+            <span class="kpi-mini-label">Tổng giao dịch</span>
+            <span class="kpi-mini-value">${formatNumber(total)}</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon green"><i class="fa-solid fa-sack-dollar"></i></div>
+          <div class="kpi-mini-copy">
+            <span class="kpi-mini-label">Tổng tiền thu</span>
+            <span class="kpi-mini-value">${formatCurrency(totalAmount)}</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon amber"><i class="fa-solid fa-money-bill-wave"></i></div>
+          <div class="kpi-mini-copy">
+            <span class="kpi-mini-label">Tiền mặt</span>
+            <span class="kpi-mini-value">${formatNumber(cashCount)}</span>
+          </div>
+        </div>
+        <div class="kpi-mini-card">
+          <div class="kpi-mini-icon purple"><i class="fa-solid fa-qrcode"></i></div>
+          <div class="kpi-mini-copy">
+            <span class="kpi-mini-label">Chuyển khoản / PayOS</span>
+            <span class="kpi-mini-value">${formatNumber(onlineCount)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   return '';
 }
 
@@ -1347,6 +1501,13 @@ function renderViewFilterTabs(view, rawData) {
       { id: 'READY', label: 'Sẵn sàng 🔔', count: list.filter(o => String(o.status).toUpperCase() === 'READY').length },
       { id: 'COMPLETED', label: 'Hoàn thành ✅', count: list.filter(o => String(o.status).toUpperCase() === 'COMPLETED').length },
       { id: 'UNPAID', label: 'Chưa trả tiền 💳', count: list.filter(o => String(o.paymentStatus).toUpperCase() !== 'PAID').length }
+    ];
+  } else if (view === 'payments') {
+    tabs = [
+      { id: 'ALL', label: 'Tất cả GD', count: list.length },
+      { id: 'SUCCESS', label: 'Thành công ✅', count: list.filter(p => String(p.status).toUpperCase() === 'SUCCESS').length },
+      { id: 'CASH', label: 'Tiền mặt 💵', count: list.filter(p => String(p.paymentMethod).toUpperCase() === 'CASH').length },
+      { id: 'ONLINE', label: 'Chuyển khoản / PayOS 📲', count: list.filter(p => ['PAYOS', 'TRANSFER', 'BANKING', 'VNPAY', 'MOMO'].includes(String(p.paymentMethod).toUpperCase())).length }
     ];
   } else if (view === 'users') {
     tabs = [
@@ -1398,6 +1559,10 @@ function getFilteredRecords(view, records) {
       if (activeTab === 'PREPARING') list = list.filter(o => ['CONFIRMED', 'PREPARING'].includes(String(o.status).toUpperCase()));
       else if (activeTab === 'UNPAID') list = list.filter(o => String(o.paymentStatus).toUpperCase() !== 'PAID');
       else list = list.filter(o => String(o.status).toUpperCase() === activeTab);
+    } else if (view === 'payments') {
+      if (activeTab === 'SUCCESS') list = list.filter(p => String(p.status).toUpperCase() === 'SUCCESS');
+      else if (activeTab === 'CASH') list = list.filter(p => String(p.paymentMethod).toUpperCase() === 'CASH');
+      else if (activeTab === 'ONLINE') list = list.filter(p => ['PAYOS', 'TRANSFER', 'BANKING', 'VNPAY', 'MOMO'].includes(String(p.paymentMethod).toUpperCase()));
     } else if (view === 'users') {
       if (activeTab === 'CUSTOMER') list = list.filter(u => String(u.role).toUpperCase() === 'CUSTOMER' || !u.role);
       else list = list.filter(u => String(u.role).toUpperCase() === activeTab);
@@ -1432,6 +1597,7 @@ function renderViewContent(view, records, mode) {
   if (view === 'tables') return renderTablesFloorGrid(records, state.activeTabs.tables || 'ALL', state.data.orders, state.data.reservations);
   if (view === 'reservations') return renderReservationsGrid(records);
   if (view === 'orders') return renderOrdersGrid(records, state.activeTabs.orders || 'ALL', state.data.tables);
+  if (view === 'payments') return renderPaymentsGrid(records, state.activeTabs.payments || 'ALL', state.data.tables);
   if (view === 'users') return renderUsersGrid(records);
   if (view === 'reviews') return renderReviewsGrid(records);
 
@@ -1548,6 +1714,10 @@ function renderDataTable(view, records) {
     return renderUsersTable(records);
   }
 
+  if (view === 'payments') {
+    return renderPaymentsTable(records);
+  }
+
   const columns = ENTITY_CONFIGS[view].columns;
   return `
     <div class="table-wrap">
@@ -1572,10 +1742,10 @@ function renderUsersTable(records) {
       <table class="data-table">
         <thead>
           <tr>
-            <th>Thành viên</th>
-            <th>Số điện thoại</th>
-            <th>Vai trò</th>
-            <th>Trạng thái</th>
+            <th><i class="fa-solid fa-user" style="color:#3b82f6"></i> Thành viên</th>
+            <th><i class="fa-solid fa-phone" style="color:#64748b"></i> Số điện thoại</th>
+            <th><i class="fa-solid fa-user-shield" style="color:#8b5cf6"></i> Vai trò</th>
+            <th><i class="fa-solid fa-shield-halved" style="color:#10b981"></i> Trạng thái</th>
             <th style="text-align:right">Thao tác</th>
           </tr>
         </thead>
@@ -1589,16 +1759,16 @@ function renderUsersTable(records) {
               <tr>
                 <td>
                   <div style="display:flex; align-items:center; gap:0.75rem">
-                    <div class="user-card-avatar" style="width:38px; height:38px; font-size:0.9rem">
+                    <div class="user-card-avatar" style="width:40px; height:40px; font-size:0.92rem; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.06)">
                       ${user.avatar ? `<img src="${escapeHtml(user.avatar)}" alt="${escapeHtml(user.fullName)}" />` : initials}
                     </div>
                     <div>
-                      <strong style="display:block; font-size:0.95rem; color:#111c2d">${escapeHtml(user.fullName || 'Người dùng')}</strong>
-                      <small style="color:#5f748d">@${escapeHtml(user.username || 'user')}</small>
+                      <strong style="display:block; font-size:0.95rem; color:#0f172a">${escapeHtml(user.fullName || 'Người dùng')}</strong>
+                      <small style="color:#64748b">@${escapeHtml(user.username || 'user')}</small>
                     </div>
                   </div>
                 </td>
-                <td><i class="fa-solid fa-phone" style="font-size:0.8rem; color:#737686; margin-right:0.3rem"></i> ${escapeHtml(user.phone || '-')}</td>
+                <td><i class="fa-solid fa-phone" style="font-size:0.78rem; color:#94a3b8; margin-right:0.3rem"></i> ${escapeHtml(user.phone || '-')}</td>
                 <td>${statusChip(role, role)}</td>
                 <td>${statusChip(isBlocked ? 'blocked' : 'active', isBlocked ? 'Bị khóa' : 'Hoạt động')}</td>
                 <td style="text-align:right">
@@ -1606,6 +1776,86 @@ function renderUsersTable(records) {
                     <button class="btn btn-ghost btn-small" data-action="view-user-detail" data-id="${user.id}"><i class="fa-solid fa-eye"></i> Chi tiết</button>
                     <button class="btn btn-secondary btn-small" data-action="edit-record" data-view="users" data-id="${user.id}" title="Sửa"><i class="fa-solid fa-pen"></i></button>
                     <button class="btn btn-danger btn-small" data-action="delete-record" data-view="users" data-id="${user.id}" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderPaymentsTable(records) {
+  const list = Array.isArray(records) ? records : [];
+  if (list.length === 0) {
+    return `<div class="empty-state"><strong>Chưa có dữ liệu thanh toán</strong></div>`;
+  }
+
+  return `
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th><i class="fa-solid fa-hashtag" style="color:#3b82f6"></i> Mã GD System</th>
+            <th><i class="fa-solid fa-qrcode" style="color:#0284c7"></i> Mã PayOS</th>
+            <th><i class="fa-solid fa-receipt" style="color:#2563eb"></i> Mã đơn</th>
+            <th><i class="fa-solid fa-user" style="color:#64748b"></i> Khách hàng</th>
+            <th><i class="fa-solid fa-money-bill-wave" style="color:#16a34a"></i> Số tiền</th>
+            <th><i class="fa-solid fa-wallet" style="color:#8b5cf6"></i> Phương thức</th>
+            <th><i class="fa-solid fa-shield-halved" style="color:#10b981"></i> Trạng thái</th>
+            <th><i class="fa-regular fa-clock" style="color:#64748b"></i> Thời gian</th>
+            <th style="text-align:right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(payment => {
+            const order = payment.Order || {};
+            const customerName = order.User?.fullName || (order.user_id ? `Khách #${order.user_id}` : 'Khách vãng lai');
+            const rawMethod = String(payment.paymentMethod || 'CASH').toUpperCase();
+            const rawStatus = String(payment.status || 'SUCCESS').toUpperCase();
+            
+            const matchNote = order.note?.match(/\[PAYOS:(\d+)\]/);
+            const matchTxn = payment.transactionCode?.match(/PAYOS-(\d+)/);
+            const payosCode = matchNote ? matchNote[1] : (matchTxn ? matchTxn[1] : null);
+
+            let methodBadgeHtml = '';
+            if (rawMethod === 'PAYOS' || payosCode) {
+              methodBadgeHtml = `<span class="badge-inline" style="background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; font-weight:800"><i class="fa-solid fa-qrcode"></i> PayOS</span>`;
+            } else if (rawMethod === 'TRANSFER' || rawMethod === 'BANKING') {
+              methodBadgeHtml = `<span class="badge-inline" style="background:linear-gradient(135deg, #0d9488, #059669); color:#fff; font-weight:800"><i class="fa-solid fa-building-columns"></i> CK</span>`;
+            } else {
+              methodBadgeHtml = `<span class="badge-inline" style="background:linear-gradient(135deg, #16a34a, #15803d); color:#fff; font-weight:800"><i class="fa-solid fa-money-bill-wave"></i> Tiền mặt</span>`;
+            }
+
+            return `
+              <tr>
+                <td><strong style="font-family:monospace; font-size:0.88rem; color:#0f172a">${escapeHtml(payment.transactionCode || `PAY-${payment.id}`)}</strong></td>
+                <td>${payosCode ? `<span class="badge-inline" style="background:#e0f2fe; color:#0284c7; font-weight:800; font-family:monospace"><i class="fa-solid fa-qrcode"></i> #${payosCode}</span>` : '<span class="muted">-</span>'}</td>
+                <td><span class="badge-inline" style="background:#eff6ff; color:#1d4ed8; font-weight:800">#${order.id || payment.order_id || '-'}</span></td>
+                <td><strong>${escapeHtml(customerName)}</strong></td>
+                <td><strong style="color:#15803d; font-size:0.95rem">${formatCurrency(payment.amount)}</strong></td>
+                <td>${methodBadgeHtml}</td>
+                <td>${statusChip(rawStatus === 'SUCCESS' ? 'SUCCESS' : 'FAILED', rawStatus === 'SUCCESS' ? 'Thành công' : 'Thất bại')}</td>
+                <td><span style="font-size:0.82rem; color:#475569">${formatDateTime(payment.paidAt || payment.created_at)}</span></td>
+                <td style="text-align:right">
+                  <div class="row-actions" style="justify-content:flex-end">
+                    <button class="btn btn-ghost btn-small" data-action="toggle-payment-detail" data-id="${payment.id}" title="Xem chi tiết món"><i class="fa-solid fa-eye"></i> Chi tiết</button>
+                    <button class="btn btn-danger btn-small" data-action="delete-record" data-view="payments" data-id="${payment.id}" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </td>
+              </tr>
+              <tr class="hidden" data-payment-detail="${payment.id}">
+                <td colspan="9" style="background:#f8fafc; padding:0.85rem 1.25rem">
+                  <div style="font-size:0.82rem; font-weight:800; color:#1e293b; margin-bottom:0.4rem">Món ăn trong hóa đơn:</div>
+                  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:0.5rem">
+                    ${(order.OrderItems || []).map(item => `
+                      <div style="background:#fff; border:1px solid #e2e8f0; padding:0.4rem 0.6rem; border-radius:8px; display:flex; justify-content:space-between; font-size:0.8rem">
+                        <span>${escapeHtml(item.Product?.name || `#${item.product_id}`)} <strong>x${item.quantity}</strong></span>
+                        <strong>${formatCurrency(item.totalPrice || 0)}</strong>
+                      </div>
+                    `).join('') || '<div class="muted">Không có chi tiết sản phẩm</div>'}
                   </div>
                 </td>
               </tr>
@@ -1664,13 +1914,13 @@ function renderOrdersTable(records) {
       <table class="data-table">
         <thead>
           <tr>
-            <th>Mã đơn</th>
-            <th>Khách</th>
-            <th>Bàn</th>
-            <th>Tổng tiền</th>
-            <th>Thanh toán</th>
-            <th>Trạng thái</th>
-            <th>Thao tác</th>
+            <th><i class="fa-solid fa-receipt" style="color:#2563eb"></i> Mã đơn</th>
+            <th><i class="fa-solid fa-user" style="color:#64748b"></i> Khách</th>
+            <th><i class="fa-solid fa-chair" style="color:#004ac6"></i> Bàn</th>
+            <th><i class="fa-solid fa-money-bill-wave" style="color:#16a34a"></i> Tổng tiền</th>
+            <th><i class="fa-solid fa-credit-card" style="color:#8b5cf6"></i> Thanh toán</th>
+            <th><i class="fa-solid fa-clock-rotate-left" style="color:#f59e0b"></i> Trạng thái</th>
+            <th style="text-align:right">Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -1679,18 +1929,18 @@ function renderOrdersTable(records) {
             const customerName = record.User?.fullName || record.user_id ? (record.User?.fullName || `#${record.user_id}`) : 'Khách vãng lai';
             return `
             <tr>
-              <td>#${record.id}</td>
-              <td>${escapeHtml(customerName)}</td>
-              <td><span class="badge-inline" style="background:#e0f2fe; color:#004ac6; font-weight:700"><i class="fa-solid ${tInfo.isTakeaway ? 'fa-bag-shopping' : 'fa-chair'}"></i> ${tInfo.label}</span></td>
-              <td>${formatCurrency(record.finalPrice ?? record.totalPrice)}</td>
+              <td><strong style="color:#0f172a; font-family:monospace; font-size:0.9rem">#${record.id}</strong></td>
+              <td><strong>${escapeHtml(customerName)}</strong></td>
+              <td><span class="badge-inline" style="background:#e0f2fe; color:#004ac6; font-weight:800"><i class="fa-solid ${tInfo.isTakeaway ? 'fa-bag-shopping' : 'fa-chair'}"></i> ${tInfo.label}</span></td>
+              <td><strong style="color:#15803d; font-size:0.95rem">${formatCurrency(record.finalPrice ?? record.totalPrice)}</strong></td>
               <td>${statusChip(paymentStatusClass(record.paymentStatus), record.paymentStatus)}</td>
               <td>
-                <select class="inline-input" style="width:auto" data-action="order-status-select" data-id="${record.id}">
+                <select class="inline-input" style="width:auto; font-weight:700" data-action="order-status-select" data-id="${record.id}">
                   ${['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED', 'CANCELLED'].map(status => `<option value="${status}" ${String(record.status).toUpperCase() === status ? 'selected' : ''}>${status}</option>`).join('')}
                 </select>
               </td>
-              <td>
-                <div class="row-actions">
+              <td style="text-align:right">
+                <div class="row-actions" style="justify-content:flex-end">
                   <button class="btn btn-secondary btn-small" data-action="save-order-status" data-id="${record.id}">Lưu</button>
                   <button class="btn btn-primary btn-small" data-action="open-admin-checkout" data-id="${record.id}" data-table="${tInfo.tableNumber || ''}" data-customer="${escapeHtml(customerName)}" data-amount="${record.finalPrice ?? record.totalPrice}" data-items="${(record.OrderItems || []).length}" data-status="${String(record.status || 'PENDING').toUpperCase()}">Thanh toán</button>
                   <button class="btn btn-danger btn-small" data-action="delete-record" data-view="orders" data-id="${record.id}">Xóa</button>
@@ -1699,8 +1949,8 @@ function renderOrdersTable(records) {
               </td>
             </tr>
             <tr class="hidden" data-order-detail="${record.id}">
-              <td colspan="7">
-                <div class="mini-card">
+              <td colspan="7" style="background:#f8fafc">
+                <div class="mini-card" style="margin:0">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; padding-bottom:0.4rem; border-bottom:1px dashed #cbd5e1">
                     <h4 class="mini-card-title" style="margin:0">Chi tiết đơn #${record.id}</h4>
                     <span class="badge-inline" style="background:#e0f2fe; color:#004ac6; font-weight:800"><i class="fa-solid ${tInfo.isTakeaway ? 'fa-bag-shopping' : 'fa-chair'}"></i> ${tInfo.label}</span>
@@ -1732,23 +1982,23 @@ function renderReviewsTable(records) {
       <table class="data-table">
         <thead>
           <tr>
-            <th>Người đánh giá</th>
-            <th>Món</th>
-            <th>Nội dung</th>
-            <th>Số sao</th>
-            <th>Ngày tạo</th>
-            <th>Thao tác</th>
+            <th><i class="fa-solid fa-user" style="color:#3b82f6"></i> Người đánh giá</th>
+            <th><i class="fa-solid fa-bowl-food" style="color:#f59e0b"></i> Món ăn</th>
+            <th><i class="fa-solid fa-comment" style="color:#64748b"></i> Nội dung đánh giá</th>
+            <th><i class="fa-solid fa-star" style="color:#eab308"></i> Số sao</th>
+            <th><i class="fa-regular fa-clock" style="color:#64748b"></i> Ngày tạo</th>
+            <th style="text-align:right">Thao tác</th>
           </tr>
         </thead>
         <tbody>
           ${list.map(record => `
             <tr>
-              <td>${escapeHtml(record.user?.fullName || record.phone || '-')}</td>
-              <td>${escapeHtml(record.dish_name || '-')}</td>
-              <td>${escapeHtml(record.content || '-')}</td>
-              <td>${escapeHtml('★'.repeat(record.rating || 0))}</td>
-              <td>${escapeHtml(formatDateTime(record.created_at || record.createdAt))}</td>
-              <td><button class="btn btn-danger btn-small" data-action="delete-record" data-view="reviews" data-id="${record.id}">Xóa</button></td>
+              <td><strong>${escapeHtml(record.user?.fullName || record.phone || 'Khách vãng lai')}</strong></td>
+              <td>${record.dish_name ? `<span class="review-dish-tag"><i class="fa-solid fa-bowl-food"></i> ${escapeHtml(record.dish_name)}</span>` : '-'}</td>
+              <td><span style="color:#334155; font-style:italic">"${escapeHtml(record.content || 'Khách không để lại nhận xét.')}"</span></td>
+              <td><span style="color:#eab308; font-weight:800">${'★'.repeat(record.rating || 0)}</span></td>
+              <td><span style="font-size:0.82rem; color:#64748b">${escapeHtml(formatDateTime(record.created_at || record.createdAt))}</span></td>
+              <td style="text-align:right"><button class="btn btn-danger btn-small" data-action="delete-record" data-view="reviews" data-id="${record.id}"><i class="fa-solid fa-trash"></i> Xóa</button></td>
             </tr>
           `).join('')}
         </tbody>
@@ -2296,7 +2546,7 @@ function bindGlobalEvents() {
           break;
         case 'save-table-status': {
           const select = app.querySelector(`[data-action="table-status-select"][data-id="${id}"]`);
-          const status = select?.value || 'AVAILABLE';
+          const status = target.dataset.status || select?.value || 'AVAILABLE';
           await simpleAction(`/api/tables/${id}/status`, {
             method: 'PUT',
             body: JSON.stringify({ status })
@@ -2329,6 +2579,11 @@ function bindGlobalEvents() {
             body: JSON.stringify({ paymentMethod: 'CASH' })
           }, 'Đơn đã được thanh toán');
           break;
+        case 'toggle-payment-detail': {
+          const detailBox = app.querySelector(`[data-payment-detail="${id}"]`);
+          if (detailBox) detailBox.classList.toggle('hidden');
+          break;
+        }
         case 'table-status-select':
           break;
         case 'search-input':

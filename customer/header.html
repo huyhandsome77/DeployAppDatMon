@@ -54,39 +54,45 @@
 </nav>
 
 
-    <div class="user-box">
+    <div class="header-right">
 
-        <i class="fa-solid fa-user"></i>
+        <div class="user-box">
 
-        <span id="username">
-            Khách
-        </span>
+            <i class="fa-solid fa-user"></i>
 
-
-        <a
-            href="setting.html"
-            class="settings-link"
-        >
-
-            <span class="settings-icon">
-
-                <i class="fa-solid fa-gear"></i>
-
+            <span id="username">
+                Khách
             </span>
 
-            <span class="settings-text">
-            </span>
+            <a
+                href="setting.html"
+                class="settings-link"
+            >
+                <span class="settings-icon">
+                    <i class="fa-solid fa-gear"></i>
+                </span>
+                <span class="settings-text">
+                </span>
+            </a>
 
-        </a>
+            <a
+                href="login.html"
+                id="loginBtn"
+                class="logout-btn"
+            >
+                Đăng nhập
+            </a>
 
+        </div>
 
-        <a
-            href="login.html"
-            id="loginBtn"
-            class="logout-btn"
-        >
-            Đăng nhập
-        </a>
+        <!-- MOBILE HAMBURGER MENU BUTTON -->
+        <button
+            type="button"
+            id="mobileMenuBtn"
+            class="menu-toggle"
+            aria-label="Toggle navigation menu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
 
     </div>
 

@@ -100,12 +100,16 @@ async function startQrScanner() {
         html5QrCode = new Html5Qrcode("qr-reader");
 
         const config = {
-            fps: 10,
-            qrbox: {
-                width: 250,
-                height: 250
+            fps: 15,
+            qrbox: (viewfinderWidth, viewfinderHeight) => {
+                const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                const qrboxSize = Math.max(160, Math.floor(minEdge * 0.75));
+                return {
+                    width: qrboxSize,
+                    height: qrboxSize
+                };
             },
-            aspectRatio: 1
+            aspectRatio: 1.0
         };
 
         await html5QrCode.start(
