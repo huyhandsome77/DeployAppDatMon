@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const { Sequelize } = require('sequelize');
+const pg = require('pg');
 
 // Load environment variables from all possible .env locations
 const envPaths = [
@@ -25,6 +26,7 @@ if (process.env.DATABASE_URL) {
     console.log(`[DB Config] Using DATABASE_URL -> Dialect: ${isPostgres ? 'PostgreSQL (Supabase)' : 'MySQL'}`);
     sequelize = new Sequelize(process.env.DATABASE_URL, {
         dialect: isPostgres ? 'postgres' : 'mysql',
+        dialectModule: isPostgres ? pg : undefined,
         logging: false,
         dialectOptions: isPostgres ? {
             ssl: {
@@ -51,6 +53,7 @@ if (process.env.DATABASE_URL) {
             host: process.env.DB_HOST || '127.0.0.1',
             port: process.env.DB_PORT || (isPostgres ? 5432 : 3306),
             dialect: isPostgres ? 'postgres' : 'mysql',
+            dialectModule: isPostgres ? pg : undefined,
             logging: false,
             dialectOptions: (process.env.DB_SSL === 'true' || isPostgres) ? {
                 ssl: {
