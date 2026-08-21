@@ -5,27 +5,20 @@ const path = require('path');
 const fs = require('fs');
 const { verifyToken, isAdmin } = require('../middlewares/authMiddleware');
 
-// Đảm bảo thư mục uploads tồn tại
-const uploadDir = process.env.VERCEL ? '/tmp/uploads' : path.join(__dirname, '..', '..', 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    try {
-        fs.mkdirSync(uploadDir, { recursive: true });
-    } catch (e) {
-        console.warn('Could not create upload directory:', e.message);
-    }
-}
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_VERSION;
+const uploadDir = isServerless ? '/tmp/uploads' : path.join(__dirname, '..', '..', 'uploads');
 
-// Cấu hình lưu trữ
+// Cấu hình lưu trữ an toàn (không gọi mkdirSync ở top-level)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        if (!fs.existsSync(uploadDir)) {
-            try {
+        try {
+            if (!fs.existsSync(uploadDir)) {
                 fs.mkdirSync(uploadDir, { recursive: true });
-            } catch (e) {
-                // fallback
             }
+            cb(null, uploadDir);
+        } catch (err) {
+            cb(null, '/tmp');
         }
-        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -36,14 +29,17 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Route upload ảnh
-router.post('/image', verifyToken, isAdmin, upload.single('image'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
-    }
-
-    // Trả về URL của ảnh
-    const imageUrl = `/uploads/${req.file.filename}`;
-    res.json({ imageUrl: imageUrl });
+router.post('/image', verifyToken, isAdmin, (req, res, next) => {
+    upload.single('image')(req, res, (err) => {
+        if (err) {
+            return res.status(500).json({ message: "Upload failed", error: err.message });
+        }
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded" });
+        }
+        const imageUrl = `/uploads/${req.file.filename}`;
+        return res.json({ imageUrl: imageUrl });
+    });
 });
 
 module.exports = router;
