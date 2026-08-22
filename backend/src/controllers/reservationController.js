@@ -6,38 +6,58 @@ exports.createReservation = async (req, res, next) => {
     try {
         const { guestName, guestPhone, reservationTime, numberOfGuests, note, user_id } = req.body;
 
-        const startTime = new Date(reservationTime);
+        if (!guestName || !guestPhone || !reservationTime) {
+            await t.rollback();
+            return res.status(400).json({
+                message: "Vui lòng nhập đầy đủ thông tin: họ tên, số điện thoại và thời gian đặt bàn!"
+            });
+        }
+
+        const dateStr = String(reservationTime).trim();
+        const startTime = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T'));
+
+        if (isNaN(startTime.getTime())) {
+            await t.rollback();
+            return res.status(400).json({
+                message: "Thời gian đặt bàn không hợp lệ. Vui lòng chọn lại ngày và giờ!"
+            });
+        }
+
+        const guestsCount = Math.max(1, Number(numberOfGuests) || 1);
         const durationHours = 2;
-        const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
+        // Two 2-hour reservations overlap if |existing.reservationTime - startTime| < 2 hours:
+        // i.e., startTime - 2h < existing.reservationTime < startTime + 2h
+        const earliestStart = new Date(startTime.getTime() - durationHours * 60 * 60 * 1000);
+        const latestStart = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
 
         const overlappingReservations = await Reservation.findAll({
             where: {
                 status: { [Op.in]: ['CONFIRMED', 'CHECKED_IN'] },
-                [Op.and]: [
-                    {
-                        reservationTime: {
-                            [Op.lt]: endTime
-                        }
-                    },
-                    sequelize.where(
-                        sequelize.fn('DATE_ADD', sequelize.col('reservationTime'), sequelize.literal(`INTERVAL ${durationHours} HOUR`)),
-                        { [Op.gt]: startTime }
-                    )
-                ]
+                reservationTime: {
+                    [Op.gt]: earliestStart,
+                    [Op.lt]: latestStart
+                }
             },
             attributes: ['table_id'],
             transaction: t
         });
 
-        const occupiedTableIds = overlappingReservations.map(r => r.table_id);
+        const occupiedTableIds = overlappingReservations
+            .map(r => r.table_id)
+            .filter(id => id != null);
+
+        const tableWhere = {
+            capacity: { [Op.gte]: guestsCount },
+            status: { [Op.ne]: 'CLEANING' }
+        };
+
+        if (occupiedTableIds.length > 0) {
+            tableWhere.id = { [Op.notIn]: occupiedTableIds };
+        }
 
         const availableTable = await RestaurantTable.findOne({
-            where: {
-                capacity: { [Op.gte]: numberOfGuests },
-                id: { [Op.notIn]: occupiedTableIds.length > 0 ? occupiedTableIds : [-1] },
-                status: { [Op.ne]: 'CLEANING' }
-            },
-            order: [['capacity', 'ASC']],
+            where: tableWhere,
+            order: [['capacity', 'ASC'], ['id', 'ASC']],
             transaction: t
         });
 
@@ -48,20 +68,29 @@ exports.createReservation = async (req, res, next) => {
             });
         }
 
+        // Validate user_id if provided to avoid foreign key violations
+        let validUserId = null;
+        if (user_id) {
+            const userExists = await User.findByPk(user_id, { transaction: t });
+            if (userExists) {
+                validUserId = userExists.id;
+            }
+        }
+
         const reservation = await Reservation.create({
             table_id: availableTable.id,
-            user_id: user_id || null,
-            guestName,
-            guestPhone,
+            user_id: validUserId,
+            guestName: String(guestName).trim(),
+            guestPhone: String(guestPhone).trim(),
             reservationTime: startTime,
-            numberOfGuests,
-            note,
+            numberOfGuests: guestsCount,
+            note: note ? String(note).trim() : null,
             status: 'PENDING'
         }, { transaction: t });
 
         await t.commit();
         res.status(201).json({
-            message: "Đặt bàn thành công",
+            message: "Đặt bàn thành công! Chúng tôi sẽ liên hệ xác nhận sớm nhất.",
             data: {
                 ...reservation.toJSON(),
                 tableNumber: availableTable.tableNumber
