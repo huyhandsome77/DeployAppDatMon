@@ -11,22 +11,29 @@ const reservationList=document.getElementById("reservationList");
 ==================================================*/
 
 document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+        const dateInput = document.getElementById("reservationDate");
+        if (dateInput) {
+            // Set min date to today (YYYY-MM-DD)
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            dateInput.min = `${yyyy}-${mm}-${dd}`;
+            if (!dateInput.value) {
+                dateInput.value = `${yyyy}-${mm}-${dd}`;
+            }
+        }
 
-"DOMContentLoaded",
+        bookingForm.addEventListener(
+            "submit",
+            submitBooking
+        );
 
-()=>{
-
-bookingForm.addEventListener(
-
-"submit",
-
-submitBooking
-
+        loadReservations();
+    }
 );
-
-loadReservations();
-
-});
 
 
 /*==================================================
@@ -34,68 +41,59 @@ loadReservations();
 ==================================================*/
 
 async function submitBooking(e){
-
     e.preventDefault();
 
     const user = JSON.parse(localStorage.getItem(USER_KEY));
+    const dateVal = document.getElementById("reservationDate").value.trim();
+    const timeVal = document.getElementById("reservationTime").value.trim();
+
+    if (!dateVal || !timeVal) {
+        showToast("Vui lòng chọn ngày và khung giờ đặt bàn (24h)!");
+        return;
+    }
+
+    const formattedTime = timeVal.length === 5 ? `${timeVal}:00` : timeVal;
 
     const body = {
-
         guestName: document.getElementById("fullName").value.trim(),
-
         guestPhone: document.getElementById("phone").value.trim(),
-
-        reservationTime:
-            `${document.getElementById("reservationDate").value} ${document.getElementById("reservationTime").value}:00`,
-
-        numberOfGuests:
-            Number(document.getElementById("numberOfGuests").value),
-
-        note:
-            document.getElementById("note").value.trim(),
-
+        reservationTime: `${dateVal} ${formattedTime}`,
+        numberOfGuests: Number(document.getElementById("numberOfGuests").value),
+        note: document.getElementById("note").value.trim(),
         user_id: user ? user.id : null
-
     };
 
     try{
-
         const result = await api(
-
             "/api/reservations",
-
             {
-
                 method:"POST",
-
                 body:JSON.stringify(body)
-
             }
-
         );
 
         showToast(result.message);
-
         bookingForm.reset();
 
-if(user){
+        const dateInput = document.getElementById("reservationDate");
+        if (dateInput) {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            dateInput.value = `${yyyy}-${mm}-${dd}`;
+        }
 
-    document.getElementById("fullName").value = user.fullName || "";
-
-}
+        if(user){
+            document.getElementById("fullName").value = user.fullName || "";
+        }
 
         loadReservations();
-
     }
-
     catch(error){
-
         console.log(error);
-
         showToast(error.message);
-
     }
-
 }
 
 
@@ -328,21 +326,14 @@ function formatDate(date){
 }
 
 function formatTime(date){
-
     return new Date(date).toLocaleTimeString(
-
         "vi-VN",
-
         {
-
-            hour:"2-digit",
-
-            minute:"2-digit"
-
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
         }
-
     );
-
 }
 
 
